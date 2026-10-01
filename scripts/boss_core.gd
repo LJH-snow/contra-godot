@@ -70,8 +70,5 @@ func damage(amt: int, dir: Vector2) -> void:
 
 func kill() -> void:
 	died.emit(score_val)
-	boss_destroyed.emit()
-	var g := get_tree().get_first_node_in_group("game")
-	if g != null:
-		g.on_boss_destroyed(position)
+	boss_destroyed.emit()                      # 爆炸与过关由 game 的信号连接处理, 只走一条路径
 	queue_free()

@@ -46,7 +46,7 @@ func _physics_process(_d: float) -> void:
 			_shot("04_bridge")
 			_next(7, 40)
 		7:
-			_tp(3098, 170)
+			_tp(3300, 170)
 			_next(8, 70)
 		8:
 			_shot("05_boss")
@@ -54,7 +54,9 @@ func _physics_process(_d: float) -> void:
 				game.boss_core.set_open(true)
 			_next(9, 30)
 		9:
-			_shot("06_boss_open")
+			if game.boss_wall != null:
+				game.boss_wall.close_gate()
+			_shot("06_boss_closed")
 			_next(10, 10)
 		10:
 			print("截图完成")

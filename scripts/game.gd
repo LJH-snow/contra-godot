@@ -118,11 +118,13 @@ func _build_statics() -> void:
 		var sn := EnemySniper.new()
 		sn.position = Vector2(s.x, s.y)
 		enemies_node.add_child(sn)
+		_hook_score(sn)
 	# 炮塔
 	for t in GameData.TURRETS:
 		var tu := EnemyTurret.new()
 		tu.position = Vector2(t.x, t.y)
 		enemies_node.add_child(tu)
+		_hook_score(tu)
 	# Boss 墙
 	boss_wall = StaticBody2D.new()
 	boss_wall.set_script(preload("res://scripts/boss_wall.gd"))
@@ -133,6 +135,7 @@ func _build_statics() -> void:
 	boss_core.position = Vector2(GameData.BOSS_X + 48 - 14, GameData.GROUND_Y - 42)
 	boss_core.boss_destroyed.connect(_on_boss_core_destroyed)
 	enemies_node.add_child(boss_core)
+	_hook_score(boss_core)
 	boss_wall.attach_core(boss_core)
 	boss_core.set_open(false)
 
@@ -232,6 +235,7 @@ func _process(delta: float) -> void:
 		_capsule_t = 11.0 + randf() * 5.0
 		var cap := EnemyCapsule.new()
 		enemies_node.add_child(cap)
+		_hook_score(cap)
 
 	# Boss 触发
 	if not boss_active and player != null and not player.dead \
@@ -253,6 +257,10 @@ func _spawn_wave() -> void:
 			sx = cam_x + 340.0
 		e.position = Vector2(sx, GameData.GROUND_Y - 40.0)
 		enemies_node.add_child(e)
+		_hook_score(e)
+
+func _hook_score(e: Enemy) -> void:
+	e.died.connect(func(s: int): Boot.score += s)
 
 # ---------------- Boss 战 ----------------
 func _start_boss() -> void:

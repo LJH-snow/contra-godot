@@ -195,9 +195,12 @@ func _try_shoot(g: Node) -> void:
 	_fire_cd = fire_interval()
 	if weapon == GameData.W.L:
 		_laser_block = true
-	var b := Bullet.new()
-	b.setup(pos, d, weapon)
-	g.bullets_node.add_child(b)
+	if weapon == GameData.W.S:                     # 散弹: 一次5发扇形
+		shoot_spread(g)
+	else:
+		var b := Bullet.new()
+		b.setup(pos, d, weapon)
+		g.bullets_node.add_child(b)
 	# 枪口焰
 	_muzzle.position = (pos - position).rotated(-rotation)
 	_muzzle.rotation = d.angle() + PI / 2.0
@@ -290,7 +293,7 @@ func respawn(at: Vector2) -> void:
 	on_ground = false
 	ctrl = true
 	collision_layer = GameData.L_PLAYER
-	collision_mask = GameData.L_WORLD
+	collision_mask = GameData.L_WORLD | GameData.L_PLATFORM
 	_tumble_a = 0.0
 
 # ---------------- 道具 ----------------
