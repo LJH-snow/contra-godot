@@ -9,6 +9,7 @@
 
 # 截图验证产物 (tools/screenshot_tour.gd 生成)
 tools/shots/
+tools/shots_qa/
 
 # macOS
 .DS_Store

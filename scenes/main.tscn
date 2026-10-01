@@ -1,10 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://contra_main1"]
+[gd_scene load_steps=7 format=3 uid="uid://contra_main1"]
 
 [ext_resource type="Script" path="res://scripts/game.gd" id="1_game"]
 [ext_resource type="Script" path="res://scripts/hud.gd" id="2_hud"]
 [ext_resource type="Texture2D" path="res://assets/sprites/bg_sky.png" id="3_sky"]
 [ext_resource type="Texture2D" path="res://assets/sprites/bg_far.png" id="4_far"]
 [ext_resource type="Texture2D" path="res://assets/sprites/bg_near.png" id="5_near"]
+[ext_resource type="Script" path="res://scripts/deco.gd" id="6_deco"]
 
 [node name="Main" type="Node2D" groups=["game"]]
 script = ExtResource("1_game")
@@ -34,6 +35,9 @@ position = Vector2(160, 208)
 texture = ExtResource("5_near")
 
 [node name="World" type="Node2D" parent="."]
+
+[node name="Deco" type="Node2D" parent="."]
+script = ExtResource("6_deco")
 
 [node name="Enemies" type="Node2D" parent="."]
 
