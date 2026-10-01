@@ -1,0 +1,27 @@
+; Engine configuration file.
+config_version=5
+
+[application]
+
+config/name="魂斗罗 CONTRA"
+run/main_scene="res://scenes/title.tscn"
+config/features=PackedStringArray("4.7")
+config/icon="res://icon.svg"
+
+[autoload]
+
+Boot="*res://scripts/boot.gd"
+
+[display]
+
+window/size/viewport_width=320
+window/size/viewport_height=240
+window/size/window_width_override=960
+window/size/window_height_override=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+window/stretch/scale_mode="integer"
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0

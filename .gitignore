@@ -1,0 +1,11 @@
+# Godot 编辑器缓存 / 导入缓存
+.godot/
+
+# 会话工具内部状态
+.mimosa/
+
+# 截图验证产物 (tools/screenshot_tour.gd 生成)
+tools/shots/
+
+# macOS
+.DS_Store
