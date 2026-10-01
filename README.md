@@ -1,5 +1,7 @@
 # 魂斗罗 CONTRA (Godot 4.7)
 
+**简体中文** | [English](README_EN.md)
+
 用 Godot 4.7 复刻的经典横版卷轴射击游戏。全部像素美术与 8-bit 音频均由
 `tools/` 下的 Python 脚本程序化生成，无外部素材依赖。
 
