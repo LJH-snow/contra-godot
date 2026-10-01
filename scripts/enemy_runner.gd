@@ -24,7 +24,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	var g := get_tree().get_first_node_in_group("game")
-	var pl := get_tree().get_first_node_in_group("player")
+	var pl: Node2D = g.nearest_player(global_position) if g != null else null
 	velocity.y = minf(velocity.y + 800.0 * delta, 420.0)
 	if _stop_t > 0.0:
 		_stop_t -= delta
@@ -62,15 +62,15 @@ func _physics_process(delta: float) -> void:
 
 func _shoot() -> void:
 	_fire_t = 1.4 + randf() * 2.0
-	var pl := get_tree().get_first_node_in_group("player")
+	var g := get_tree().get_first_node_in_group("game")
+	if g == null:
+		return
+	var pl: Node2D = g.nearest_player(global_position)
 	if pl == null:
 		return
 	var d := signf(pl.global_position.x - global_position.x)
 	if d == 0.0:
 		d = -1.0
-	var g := get_tree().get_first_node_in_group("game")
-	if g == null:
-		return
 	var eb := EBullet.new()
 	g.enemies_node.add_child(eb)
 	eb.setup(global_position + Vector2(d * 12.0, -15.0), Vector2(d, 0.0),

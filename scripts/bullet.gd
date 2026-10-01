@@ -23,7 +23,9 @@ func setup(pos: Vector2, d: Vector2, w: int) -> void:
 
 func _ready() -> void:
 	collision_layer = GameData.L_PBULLET
-	collision_mask = GameData.L_ENEMY
+	# 火球为螺旋弹道会俯冲贴地, 免地形碰撞; 其余武器撞实地/Boss墙即消失
+	collision_mask = GameData.L_ENEMY if wtype == GameData.W.F \
+			else GameData.L_ENEMY | GameData.L_WORLD
 	_sprite = Sprite2D.new()
 	add_child(_sprite)
 	match wtype:
@@ -77,7 +79,12 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 
 func _on_body(b: Node) -> void:
-	if _dead or not b.has_method("damage"):
+	if _dead:
+		return
+	if b is StaticBody2D:                      # 实实地形/Boss墙: 子弹被挡消失
+		_die()
+		return
+	if not b.has_method("damage"):
 		return
 	if b in _hit:
 		return

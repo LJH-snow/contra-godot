@@ -30,7 +30,10 @@ func aim_angle(pl: Node2D) -> float:
 	return v.angle()
 
 func _physics_process(delta: float) -> void:
-	var pl := get_tree().get_first_node_in_group("player")
+	var g := get_tree().get_first_node_in_group("game")
+	if g == null:
+		return
+	var pl: Node2D = g.nearest_player(global_position)
 	if pl == null:
 		return
 	var dx: float = pl.global_position.x - global_position.x
@@ -43,14 +46,15 @@ func _physics_process(delta: float) -> void:
 		if _t <= 0.0:
 			_t = fire_int * (0.85 + randf() * 0.3)
 			_fire()
-	var g := get_tree().get_first_node_in_group("game")
-	if g != null and position.x < g.cam_x - 90.0:
+	if position.x < g.cam_x - 90.0:
 		queue_free()
 
 func _fire() -> void:
 	var g := get_tree().get_first_node_in_group("game")
-	var pl := get_tree().get_first_node_in_group("player")
-	if g == null or pl == null:
+	if g == null:
+		return
+	var pl: Node2D = g.nearest_player(global_position)
+	if pl == null:
 		return
 	var d := Vector2.RIGHT.rotated(_angle)
 	if _sprite.flip_h:                         # 朝左: 直接取玩家方向

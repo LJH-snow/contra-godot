@@ -21,9 +21,10 @@ func _physics_process(_d: float) -> void:
 			_shot("01_title")
 			_next(1, 10)
 		1:
-			# 清掉标题, 进主场景
+			# 清掉标题, 设置双人模式, 进主场景
 			for c in get_children():
 				c.queue_free()
+			Boot.player_count = 2
 			var gs: PackedScene = load("res://scenes/main.tscn")
 			game = gs.instantiate()
 			add_child(game)

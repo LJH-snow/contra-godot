@@ -42,20 +42,20 @@ static var GROUNDS: Array[Vector2i] = [
 static var BRIDGE := Vector2i(1504, 1664)
 const BRIDGE_SEG := 16
 
-# 浮台 (左端x, 顶面y, 宽)
+# 浮台 (左端x, 顶面y, 宽) — 两层: 144 与 116, 满跳(≈88px)均可从地面直接登顶
 static var PLATFORMS: Array[Vector3i] = [
-	Vector3i(368, 144, 64), Vector3i(480, 112, 48),
-	Vector3i(720, 144, 64), Vector3i(832, 112, 64), Vector3i(944, 144, 48),
+	Vector3i(368, 144, 64), Vector3i(480, 116, 48),
+	Vector3i(720, 144, 64), Vector3i(832, 116, 64), Vector3i(944, 144, 48),
 	Vector3i(1320, 144, 80),
-	Vector3i(1740, 112, 64), Vector3i(1856, 144, 64), Vector3i(1968, 112, 48),
-	Vector3i(2400, 144, 64), Vector3i(2512, 112, 64), Vector3i(2624, 144, 48),
-	Vector3i(2760, 112, 80), Vector3i(2960, 144, 48),
+	Vector3i(1740, 116, 64), Vector3i(1856, 144, 64), Vector3i(1968, 116, 48),
+	Vector3i(2400, 144, 64), Vector3i(2512, 116, 64), Vector3i(2624, 144, 48),
+	Vector3i(2760, 116, 80), Vector3i(2960, 144, 48),
 ]
 
 # 固定狙击手 (x, 脚底y)
 static var SNIPERS: Array[Vector2i] = [
 	Vector2i(420, 200), Vector2i(1096, 200), Vector2i(1370, 200),
-	Vector2i(2064, 200), Vector2i(2544, 112), Vector2i(2700, 144),
+	Vector2i(2064, 200), Vector2i(2544, 116), Vector2i(2700, 144),
 	Vector2i(2920, 200), Vector2i(3120, 200),
 ]
 # 固定炮塔 (x, 所在地面y)

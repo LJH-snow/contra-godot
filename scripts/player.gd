@@ -4,17 +4,19 @@ class_name Player extends CharacterBody2D
 signal died
 signal weapon_changed(w: int)
 
-const SHEET := preload("res://assets/sprites/player.png")
+const SHEET_P1 := preload("res://assets/sprites/player.png")
+const SHEET_P2 := preload("res://assets/sprites/player2.png")
 const INVINCIBLE_TIME := 2.0
 const SHIELD_TIME := 12.0
 
 # 姿态
 enum P { RUN_AIM, RUN_UP, TUMBLE, PRONE, DEAD_FLY, DEAD_GROUND }
 
+var pnum := 1
+var respawn_t := 0.0
 var weapon := GameData.W.NORMAL
 var rapid := false
 var lives := 3
-var respawn_left := 0
 var facing := 1
 var prone := false
 var on_ground := false
@@ -45,7 +47,7 @@ func _ready() -> void:
 	collision_layer = GameData.L_PLAYER
 	collision_mask = GameData.L_WORLD | GameData.L_PLATFORM
 	_sprite = Sprite2D.new()
-	_sprite.texture = SHEET
+	_sprite.texture = SHEET_P1 if pnum == 1 else SHEET_P2
 	_sprite.hframes = 6
 	_sprite.vframes = 6
 	add_child(_sprite)
@@ -83,6 +85,14 @@ func _ready() -> void:
 	lives = Boot.start_lives
 	weapon_changed.emit(weapon)
 
+
+# ---------------- 输入 (按玩家编号区分键位) ----------------
+func _act(name: String) -> String:
+	return ("p1_" if pnum == 1 else "p2_") + name
+
+func _axis_x() -> float:
+	return Input.get_axis(_act("left"), _act("right"))
+
 # ---------------- 主循环 ----------------
 func _physics_process(delta: float) -> void:
 	if dead:
@@ -102,13 +112,13 @@ func _physics_process(delta: float) -> void:
 	var g := get_tree().get_first_node_in_group("game")
 
 	# 重力
-	velocity.y = minf(velocity.y + 820.0 * delta, 430.0)
+	velocity.y = minf(velocity.y + 860.0 * delta, 460.0)
 
 	# 水平移动
-	var ax := Input.get_axis("move_left", "move_right")
+	var ax := _axis_x()
 	if not ctrl:
 		ax = 0.0
-	prone = on_ground and Input.is_action_pressed("move_down") and ctrl
+	prone = on_ground and Input.is_action_pressed(_act("down")) and ctrl
 	if prone:
 		velocity.x = move_toward(velocity.x, 0.0, 1400.0 * delta)
 	else:
@@ -117,20 +127,20 @@ func _physics_process(delta: float) -> void:
 		if ax != 0.0:
 			facing = 1 if ax > 0.0 else -1
 
-	# 跳跃 (可变高度)
-	if ctrl and Input.is_action_just_pressed("jump") and on_ground:
-		velocity.y = -305.0
+	# 跳跃 (可变高度, 满跳约 88px: 可从地面直接跳上两层浮台)
+	if ctrl and Input.is_action_just_pressed(_act("jump")) and on_ground:
+		velocity.y = -390.0
 		on_ground = false
 		Boot.play_sfx("sfx_jump", -6.0)
-	if velocity.y < 0.0 and not Input.is_action_pressed("jump"):
-		velocity.y += 900.0 * delta
+	if velocity.y < 0.0 and not Input.is_action_pressed(_act("jump")):
+		velocity.y += 950.0 * delta
 
 	# 翻滚动画计时
 	if not on_ground:
 		_tumble_a += delta * 10.5
 
 	# 射击
-	if ctrl and Input.is_action_pressed("shoot"):
+	if ctrl and Input.is_action_pressed(_act("shoot")):
 		_try_shoot(g)
 	else:
 		_laser_block = false
@@ -159,14 +169,14 @@ func _update_ground(_g: Node) -> void:
 
 # ---------------- 射击 ----------------
 func aim_dir() -> Vector2:
-	var up := Input.is_action_pressed("move_up")
-	var down := Input.is_action_pressed("move_down")
+	var up := Input.is_action_pressed(_act("up"))
+	var down := Input.is_action_pressed(_act("down"))
 	if on_ground and down and absf(velocity.x) < 5.0:
 		return Vector2.ZERO                    # 卧倒单独处理
 	if up and down:
 		return Vector2.ZERO
 	if up:
-		var d := Vector2(facing, -1).normalized() if absf(velocity.x) > 5.0 or Input.get_axis("move_left", "move_right") != 0.0 else Vector2(0, -1)
+		var d := Vector2(facing, -1).normalized() if absf(velocity.x) > 5.0 or _axis_x() != 0.0 else Vector2(0, -1)
 		return d
 	if on_ground and down:
 		return Vector2(facing, 0)
@@ -180,7 +190,7 @@ func muzzle_pos(d: Vector2) -> Vector2:
 func _try_shoot(g: Node) -> void:
 	if _fire_cd > 0.0:
 		return
-	if g == null or not g.player_in_bounds():
+	if g == null or position.x < g.cam_x - 10.0:   # 不在屏幕内不能开火
 		return
 	var d := aim_dir()
 	var pos: Vector2
@@ -324,8 +334,8 @@ func _animate(_delta: float) -> void:
 		_sprite.frame = 18 + (int(_tumble_a) % 4)   # 空中翻滚
 		return
 	# 站立瞄准方向: 水平0 斜上1 竖上2
-	var up := Input.is_action_pressed("move_up")
-	var ax := Input.get_axis("move_left", "move_right")
+	var up := Input.is_action_pressed(_act("up"))
+	var ax := _axis_x()
 	if up and ax == 0.0:
 		_sprite.frame = 2
 	elif up:

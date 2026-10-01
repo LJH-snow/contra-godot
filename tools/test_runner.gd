@@ -10,9 +10,11 @@ var _tag_runner: EnemyRunner
 var _tag_runner2: EnemyRunner
 var _step9_ticks := 0
 var _total_ticks := 0
+var _jump_min_y := 99999.0
 
 func _ready() -> void:
 	print("=== 魂斗罗自动化测试开始 ===")
+	Boot.player_count = 2
 	var gs: PackedScene = load("res://scenes/main.tscn")
 	game = gs.instantiate()
 	add_child(game)
@@ -45,6 +47,7 @@ func _physics_process(_d: float) -> void:
 		0:
 			if _due():
 				check(game.player != null, "玩家已生成")
+				check(game.players.size() == 2, "双人模式: P2已生成(共%d人)" % game.players.size())
 				check(game.world_node.get_child_count() > 100, "地形已构建(%d块)" % game.world_node.get_child_count())
 				check(get_tree().get_nodes_in_group("enemies").size() >= 8, "静态敌人已布置")
 				_next(1, 10)
@@ -89,11 +92,26 @@ func _physics_process(_d: float) -> void:
 			if _due():
 				check(not game.player.dead, "自动复活完成")
 				check(game.player.invuln_t > 0.0, "复活保护生效(%.2fs)" % game.player.invuln_t)
+				_next(7, 10)
+		7:
+			# 跳跃高度: 传送空地, 按住跳跃键 70 tick, 顶点必须够到第二层浮台高度(116)
+			if _wait == 8:
+				game.player.position = Vector2(100, GameData.GROUND_Y)
+				game.player.velocity = Vector2.ZERO
+			if _due():
+				Input.action_press("jump")
+				_jump_min_y = 99999.0
+				_next(8, 70)
+		8:
+			_jump_min_y = minf(_jump_min_y, game.player.position.y)
+			if _due():
+				Input.action_release("jump")
+				check(_jump_min_y < 122.0, "跳跃高度够到第二层浮台(顶点y=%.0f, 需<122)" % _jump_min_y)
 				if game.bridge != null and game.bridge.segs.size() > 0:
 					game.player.position = Vector2(game.bridge.position.x + 8, game.bridge.position.y - 6)
 					game.player.velocity = Vector2.ZERO
-				_next(7, 100)
-		7:
+				_next(9, 100)
+		9:
 			if _due():
 				if game.bridge != null:
 					check(game.bridge._lit >= 0, "吊桥逐段爆炸(已炸%d段)" % (game.bridge._lit + 1))
@@ -102,30 +120,27 @@ func _physics_process(_d: float) -> void:
 				game.player.velocity = Vector2.ZERO
 				if game.player.dead:
 					game.player.respawn(game.player.position)
-				_next(8, 30)
-		8:
+				_next(10, 30)
+		10:
 			if _due():
 				check(game.boss_active, "Boss战已触发")
 				check(game._gate_open, "Boss闸门开启")
-				_next(9, 2)
-		9:
+				_next(11, 2)
+		11:
 			# 持续对核心输出直至击破
 			_step9_ticks += 1
-			if _step9_ticks == 300:
-				print("  [boss诊断] core_hp=", game.boss_core.hp if is_instance_valid(game.boss_core) else -1,
-					" level_done=", game.level_done, " cam=", game.cam_x)
 			if game.level_done:
 				check(true, "Boss被击破,关卡完成")
-				_next(10, 0)
+				_next(12, 0)
 			elif _step9_ticks > 1200:
 				check(false, "Boss未能被击破")
-				_next(10, 0)
+				_next(12, 0)
 			elif game.boss_core != null and is_instance_valid(game.boss_core):
 				game.boss_core.set_open(true)
 				var b := Bullet.new()
 				b.setup(game.boss_core.position + Vector2(-30, -14), Vector2.RIGHT, GameData.W.NORMAL)
 				game.bullets_node.add_child(b)
-		10:
+		12:
 			print("=== 测试结束: %d 失败 ===" % fails.size())
 			for f in fails:
 				print("  失败项: ", f)

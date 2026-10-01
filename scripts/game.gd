@@ -13,7 +13,8 @@ const PLAYER_SCENE := preload("res://scripts/player.gd")
 const BRIDGE_SCENE := preload("res://scripts/bridge.gd")
 
 # 节点
-var player: Player
+var players: Array[Player] = []
+var player: Player                       # 兼容引用 = P1
 var world_node: Node2D
 var enemies_node: Node2D
 var bullets_node: Node2D
@@ -34,9 +35,9 @@ var _items_dropped := 0
 var _w := [GameData.W.M, GameData.W.S, GameData.W.L, GameData.W.F, GameData.W.R, GameData.W.B]
 var _wig := [0, 1, 2, 3, 4, 5]
 var _wig_i := 0
-var _respawn_t := 0.0
 var _end_t := 0.0
 var _intro_t := 2.0
+var _gate_timer: Timer
 
 # HUD 引用(由 main.tscn 提供)
 @onready var hud: CanvasLayer = $HUD
@@ -49,10 +50,81 @@ func _ready() -> void:
 	items_node = $Items
 	_build_terrain()
 	_build_statics()
-	_spawn_player(Vector2(40, GameData.GROUND_Y))
+	_spawn_players()
 	Boot.play_music("music_stage")
-	hud.call("set_weapon", player.weapon)
+	for p in players:
+		hud.call("set_weapon", p.pnum, p.weapon)
 	hud.call("flash_message", "mission1", 2.0)
+
+# ---------------- 玩家 ----------------
+func _spawn_players() -> void:
+	_spawn_player(Vector2(40, GameData.GROUND_Y), 1)
+	if Boot.player_count >= 2:
+		_spawn_player(Vector2(70, GameData.GROUND_Y), 2)
+
+func _spawn_player(at: Vector2, num: int) -> void:
+	var p: Player = PLAYER_SCENE.new()
+	p.pnum = num
+	p.position = at
+	add_child(p)
+	p.add_to_group("player")
+	p.died.connect(_on_player_died.bind(p))
+	p.weapon_changed.connect(func(w: int): hud.call("set_weapon", num, w))
+	p.lives = Boot.start_lives
+	p.invuln_t = 2.0
+	players.append(p)
+	if num == 1:
+		player = p
+
+func nearest_player(pos: Vector2) -> Player:
+	# 最近的存活玩家 (都死光时返回 null)
+	var best: Player = null
+	var best_d := INF
+	for p in players:
+		if p.dead:
+			continue
+		var d: float = p.position.distance_squared_to(pos)
+		if d < best_d:
+			best_d = d
+			best = p
+	return best
+
+func alive_players() -> Array[Player]:
+	var out: Array[Player] = []
+	for p in players:
+		if not p.dead:
+			out.append(p)
+	return out
+
+func _on_player_died(p: Player) -> void:
+	if p.lives > 0:
+		p.respawn_t = 1.6
+	elif alive_players().is_empty():
+		_game_over()
+
+func _respawn_player(p: Player) -> void:
+	var base := cam_x + 30.0
+	if players.size() > 1:
+		# 避开还活着的同伴
+		for other in players:
+			if not other.dead and absf(other.position.x - base) < 24.0:
+				base += 26.0
+	# 从近到远找有落点的复活位, 避免悬在水面正上方连死
+	var x := base
+	var fy := INF
+	for off in [0.0, 30.0, 60.0, 90.0, -30.0, -60.0]:
+		x = base + off
+		fy = floor_y_at(x, GameData.GROUND_Y)
+		if fy != INF:
+			break
+	if fy == INF:
+		x = base + 120.0
+		fy = GameData.GROUND_Y
+	p.respawn(Vector2(x, fy))
+	# 复活点附近清场保护
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if absf(e.position.x - x) < 100.0 and e is EnemyRunner:
+			e.queue_free()
 
 # ---------------- 地形 ----------------
 func _build_terrain() -> void:
@@ -143,41 +215,8 @@ func _on_boss_core_destroyed() -> void:
 	on_boss_destroyed(boss_wall.position + Vector2(48, 24))
 
 # ---------------- 玩家 ----------------
-func _spawn_player(at: Vector2) -> void:
-	player = PLAYER_SCENE.new()
-	player.position = at
-	add_child(player)
-	player.add_to_group("player")
-	player.died.connect(_on_player_died)
-	player.weapon_changed.connect(_on_weapon_changed)
-	player.invuln_t = 2.0
-
-func _on_player_died() -> void:
-	if player.lives <= 0:
-		_game_over()
-	else:
-		_respawn_t = 1.6
-
-func _on_weapon_changed(w: int) -> void:
-	hud.call("set_weapon", w)
-
 func player_in_bounds() -> bool:
-	return player != null and not player.dead and player.position.x > cam_x - 10.0
-
-func _respawn_player() -> void:
-	var x := cam_x + 30.0
-	# 找安全的地面
-	var fy := floor_y_at(x, GameData.GROUND_Y)
-	if fy == INF:
-		x = cam_x + 60.0
-		fy = floor_y_at(x, GameData.GROUND_Y)
-	if fy == INF:
-		fy = GameData.GROUND_Y
-	player.respawn(Vector2(x, fy))
-	# 敌人清场保护
-	for e in get_tree().get_nodes_in_group("enemies"):
-		if absf(e.position.x - x) < 100.0 and e is EnemyRunner:
-			e.queue_free()
+	return not alive_players().is_empty()
 
 # ---------------- 通用查询 ----------------
 func has_floor(x: float, _y: float) -> bool:
@@ -196,18 +235,28 @@ func has_floor(x: float, _y: float) -> bool:
 	return false
 
 func floor_y_at(x: float, y_near: float) -> float:
-	# 返回 x 处、y_near 上方或附近的地面顶 y; 无则 INF
-	if has_floor(x, y_near) and y_near <= GameData.GROUND_Y + 8.0:
-		return GameData.GROUND_Y
-	return INF
+	# 返回 x 处、y_near 上方或附近的落点 y (浮台优先, 其次实地); 无则 INF
+	var best := INF
+	for p in GameData.PLATFORMS:
+		if x >= p.x and x <= p.x + p.z and y_near <= p.y + 8.0:
+			best = minf(best, p.y)
+	if best == INF and has_floor(x, y_near) and y_near <= GameData.GROUND_Y + 8.0:
+		best = GameData.GROUND_Y
+	return best
 
 # ---------------- 帧循环 ----------------
 func _physics_process(delta: float) -> void:
 	# 复活倒计时用物理步长, 保证计时精确
-	if not level_done and player != null and player.dead and player.lives > 0:
-		_respawn_t -= delta
-		if _respawn_t <= 0.0:
-			_respawn_player()
+	if level_done:
+		return
+	for p in players:
+		if p.dead and p.lives > 0:
+			p.respawn_t -= delta
+			if p.respawn_t <= 0.0:
+				_respawn_player(p)
+		# 落后者不得超出屏幕左缘 (经典规则: 被镜头甩出即被推回)
+		if not p.dead and p.position.x < cam_x + 6.0:
+			p.position.x = cam_x + 6.0
 
 func _process(delta: float) -> void:
 	if level_done:
@@ -217,10 +266,14 @@ func _process(delta: float) -> void:
 		_intro_t -= delta
 		return
 
-	# 相机: 只前进不后退(经典规则), Boss区自然钳制到右端
+	# 相机: 跟随最靠前的存活玩家, 只前进不后退(经典规则)
 	var target := 0.0
-	if player != null:
-		target = clampf(player.position.x - 120.0, 0.0, GameData.LEVEL_W - 320.0)
+	var alive := alive_players()
+	if not alive.is_empty():
+		var lead_x := -INF
+		for p in alive:
+			lead_x = maxf(lead_x, p.position.x)
+		target = clampf(lead_x - 120.0, 0.0, GameData.LEVEL_W - 320.0)
 	cam_x = maxf(cam_x, target)
 	position = Vector2(-cam_x, 0)
 
@@ -237,10 +290,12 @@ func _process(delta: float) -> void:
 		enemies_node.add_child(cap)
 		_hook_score(cap)
 
-	# Boss 触发
-	if not boss_active and player != null and not player.dead \
-			and player.position.x >= boss_trigger_x:
-		_start_boss()
+	# Boss 触发: 任一存活玩家到达警戒线
+	if not boss_active and not alive.is_empty():
+		for p in alive:
+			if p.position.x >= boss_trigger_x:
+				_start_boss()
+				break
 
 func _spawn_wave() -> void:
 	var count := 1 + (randi() % 2) + (1 if Boot.loop_count > 1 else 0)
@@ -274,11 +329,14 @@ func _start_boss() -> void:
 	timer.autostart = true
 	add_child(timer)
 	timer.timeout.connect(_toggle_gate)
+	_gate_timer = timer
 	_toggle_gate()
 
 var _gate_open := false
 func _toggle_gate() -> void:
 	if level_done:
+		if _gate_timer != null:
+			_gate_timer.stop()
 		return
 	_gate_open = not _gate_open
 	if _gate_open:

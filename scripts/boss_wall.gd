@@ -46,9 +46,12 @@ func close_gate() -> void:
 
 func build_shapes() -> void:
 	# 96 宽 x 200 高: 上下横梁 + 左右两柱, 中门 40 宽区域为开口
+	# 左柱拆成上下两段, 中间 y(局部)108..162 留作射击窗口:
+	# 子弹可穿过窗口命中门内核心, 玩家身体仍被下横梁挡住
 	for meta in [[Vector2(48, 24), Vector2(96, 48)],
 			[Vector2(48, 178), Vector2(96, 44)],
-			[Vector2(14, 100), Vector2(28, 108)],
+			[Vector2(14, 89), Vector2(28, 38)],
+			[Vector2(14, 170), Vector2(28, 16)],
 			[Vector2(82, 100), Vector2(28, 108)]]:
 		var cs := CollisionShape2D.new()
 		var sh := RectangleShape2D.new()

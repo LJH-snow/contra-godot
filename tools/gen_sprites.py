@@ -101,25 +101,28 @@ def save(img, name):
 # ---------------- 玩家 (比尔·雷泽, 朝右) ----------------
 # 布局 6列x6行, 32x32: 行0=站立瞄准(横/斜上/竖上) 行1=跑动瞄准水平(6)
 # 行2=跑动瞄准斜上(6) 行3=空中翻滚(4) 行4=[卧倒,死亡飞出,死亡倒地]
-def draw_torso(c, bob=0, lean=0):
+P1_PAL = {"band": BAND, "pants": PANTS, "pants2": PANTS2, "boot": BOOT, "boot2": BOOT2}
+P2_PAL = {"band": (56, 120, 236), "pants": (208, 64, 52), "pants2": (156, 40, 34),
+          "boot": (120, 76, 150), "boot2": (88, 52, 112)}
+
+def draw_torso(c, bob=0, lean=0, pal=P1_PAL):
     """躯干+头, 根部在脚底 y=30"""
     y = bob
     c.rect(12, 10 + y, 8, 3, HAIR)                       # 头发
-    c.rect(11, 12 + y, 10, 3, BAND)                      # 红头带
-    c.px(10, 13 + y, BAND); c.px(9, 12 + y, BAND); c.px(8, 11 + y, BAND)  # 带尾
+    c.rect(11, 12 + y, 10, 3, pal["band"])               # 头带
+    c.px(10, 13 + y, pal["band"]); c.px(9, 12 + y, pal["band"]); c.px(8, 11 + y, pal["band"])  # 带尾
     c.rect(12, 15 + y, 9, 4, SKIN)                       # 脸
     c.px(19, 16 + y, OUTL)                               # 眼
     c.rect(12 + lean, 19 + y, 9 - lean, 2, SKIN)         # 脖子/上胸
     c.rect(12 + lean, 21 + y, 9 - lean, 5, SKIN)         # 胸肌
     c.rect(12 + lean, 25 + y, 9 - lean, 3, SKIN2)        # 腹部阴影
     c.line(16, 20 + y, 16, 27 + y, OUTL)                 # 中线
-def draw_legs_stand(c, bob=0):
+def draw_legs_stand(c, bob=0, pal=P1_PAL):
     y = bob
-    c.rect(12, 28 + y, 4, 2, PANTS); c.rect(17, 28 + y, 4, 2, PANTS)
-    c.rect(12, 28 + y, 4, 2, PANTS); c.rect(17, 28 + y, 4, 2, PANTS)
-    c.rect(11, 28 + y, 5, 2, PANTS2); c.rect(17, 28 + y, 5, 2, PANTS)
-    c.rect(11, 30, 5, 2, BOOT); c.rect(17, 30, 6, 2, BOOT)
-    c.rect(11, 31, 5, 1, BOOT2); c.rect(17, 31, 6, 1, BOOT2)
+    c.rect(12, 28 + y, 4, 2, pal["pants"]); c.rect(17, 28 + y, 4, 2, pal["pants"])
+    c.rect(11, 28 + y, 5, 2, pal["pants2"]); c.rect(17, 28 + y, 5, 2, pal["pants"])
+    c.rect(11, 30, 5, 2, pal["boot"]); c.rect(17, 30, 6, 2, pal["boot"])
+    c.rect(11, 31, 5, 1, pal["boot2"]); c.rect(17, 31, 6, 1, pal["boot2"])
 def draw_rifle(c, x, y, angle, bob=0):
     """在肩部(x,y)按 angle(弧度, 0=右, -pi/2=上)画枪+手臂"""
     dx, dy = math.cos(angle), math.sin(angle)
@@ -130,15 +133,15 @@ def draw_rifle(c, x, y, angle, bob=0):
     c.line(x, y + 1, mx, my + 1, BOOT)         # 木质枪托
     c.disc(x + dx * 6, y + dy * 6 + 1, 1.6, SKIN)   # 前手
     c.disc(x + 1, y + 1, 2, SKIN)                    # 后手
-def gen_player():
+def gen_player(pal=P1_PAL, name="player.png"):
     S = new_sheet(32 * 6, 32 * 6)
     def cell(col, row):
         return Cell(S, col * 32, row * 32, 32, 32)
     # 行0: 站立三方向
     for i, ang in enumerate([0.0, -math.pi / 4, -math.pi / 2]):
         c = cell(i, 0)
-        draw_torso(c, lean=1 if i else 0)
-        draw_legs_stand(c)
+        draw_torso(c, lean=1 if i else 0, pal=pal)
+        draw_legs_stand(c, pal=pal)
         draw_rifle(c, 17, 22 + (1 if i == 0 else 0), ang)
         c.outline()
     # 行1/2: 跑动循环 6 帧 (水平/斜上)
@@ -147,7 +150,7 @@ def gen_player():
             c = cell(f, row)
             bob = 1 if f % 2 == 0 else 0
             ph = f / 6.0 * 2 * math.pi
-            draw_torso(c, bob=bob)
+            draw_torso(c, bob=bob, pal=pal)
             hipx, hipy = 16.5, 28 + bob
             for side in (1, -1):                # 两条腿相位差半圈
                 p = ph + (0 if side > 0 else math.pi)
@@ -155,18 +158,18 @@ def gen_player():
                 fy = hipy + 1 - abs(math.sin(p)) * 2.2 + (math.sin(p) > 0) * 1.2
                 kx = hipx + math.cos(p) * 4.5 + side
                 ky = hipy - 1 + abs(math.sin(p)) * 1.5
-                c.line(hipx, hipy, kx, ky, PANTS if side > 0 else PANTS2, 2)
-                c.line(kx, ky, fx, fy, PANTS if side > 0 else PANTS2, 2)
-                c.rect(fx - 2, fy, 5 if side > 0 else 4, 2, BOOT if side > 0 else BOOT2)
+                c.line(hipx, hipy, kx, ky, pal["pants"] if side > 0 else pal["pants2"], 2)
+                c.line(kx, ky, fx, fy, pal["pants"] if side > 0 else pal["pants2"], 2)
+                c.rect(fx - 2, fy, 5 if side > 0 else 4, 2, pal["boot"] if side > 0 else pal["boot2"])
             draw_rifle(c, 17, 22 + bob, ang)
             c.outline()
     # 行3: 空中翻滚团身(4帧旋转)
     ball = new_sheet(20, 20)
     b = Cell(ball, 0, 0, 20, 20)
     b.disc(10, 10, 7.2, SKIN)                   # 团起身躯
-    b.disc(10, 8, 4, BAND)                      # 红头带在上
-    b.rect(3, 9, 4, 5, PANTS)                   # 蜷起的腿
-    b.rect(14, 10, 4, 3, BOOT)                  # 靴子
+    b.disc(10, 8, 4, pal["band"])               # 头带在上
+    b.rect(3, 9, 4, 5, pal["pants"])            # 蜷起的腿
+    b.rect(14, 10, 4, 3, pal["boot"])           # 靴子
     b.rect(14, 6, 5, 3, SKIN2)                  # 手臂抱膝
     b.outline()
     for f in range(4):
@@ -174,26 +177,26 @@ def gen_player():
         S.alpha_composite(rot, (f * 32 + 6, 32 * 3 + 6))
     # 行4: 卧倒 / 死亡飞出 / 死亡倒地
     c = cell(0, 4)                              # 卧倒射击
-    c.rect(4, 24, 24, 3, PANTS)
-    c.rect(2, 24, 6, 3, BOOT)
+    c.rect(4, 24, 24, 3, pal["pants"])
+    c.rect(2, 24, 6, 3, pal["boot"])
     c.rect(14, 23, 9, 4, SKIN)
     c.rect(22, 21, 5, 3, SKIN)
-    c.rect(24, 22, 4, 2, BAND)
+    c.rect(24, 22, 4, 2, pal["band"])
     c.line(4, 25, 30, 25, GUN, 2)
     c.px(30, 25, GUN2); c.px(31, 24, BYEL)
     c.outline()
     c = cell(1, 4)                              # 死亡飞出(仰面四肢张开)
-    c.disc(14, 16, 4, SKIN); c.rect(11, 12, 7, 2, BAND)
+    c.disc(14, 16, 4, SKIN); c.rect(11, 12, 7, 2, pal["band"])
     c.line(11, 18, 5, 22, SKIN, 2); c.line(18, 18, 25, 21, SKIN, 2)
-    c.line(12, 20, 8, 28, PANTS, 2); c.line(17, 20, 22, 27, PANTS, 2)
-    c.rect(6, 28, 3, 2, BOOT); c.rect(22, 27, 3, 2, BOOT)
+    c.line(12, 20, 8, 28, pal["pants"], 2); c.line(17, 20, 22, 27, pal["pants"], 2)
+    c.rect(6, 28, 3, 2, pal["boot"]); c.rect(22, 27, 3, 2, pal["boot"])
     c.outline()
     c = cell(2, 4)                              # 死亡倒地
     c.rect(6, 28, 20, 3, SKIN)
-    c.rect(24, 27, 4, 3, SKIN); c.rect(25, 25, 3, 2, BAND)
-    c.line(4, 29, 10, 29, BOOT, 2)
+    c.rect(24, 27, 4, 3, SKIN); c.rect(25, 25, 3, 2, pal["band"])
+    c.line(4, 29, 10, 29, pal["boot"], 2)
     c.outline()
-    save(S, "player.png")
+    save(S, name)
 
 # ---------------- 敌人 ----------------
 # enemies.png 6列x3行 32x32: 行0=跑兵(4) 行1=狙击手(横/斜上/竖上) 行2=飞行胶囊(2)
@@ -496,13 +499,14 @@ def gen_title():
 
 # ---------------- 生命图标 / 预览图 ----------------
 def gen_misc():
-    S = new_sheet(12, 12)
-    c = Cell(S, 0, 0, 12, 12)
-    c.rect(2, 1, 8, 3, BAND)
-    c.rect(2, 4, 8, 4, SKIN); c.px(3, 6, OUTL)
-    c.rect(2, 8, 8, 3, PANTS)
-    c.outline()
-    save(S, "life.png")
+    for pname, pal in (("life.png", P1_PAL), ("life2.png", P2_PAL)):
+        S = new_sheet(12, 12)
+        c = Cell(S, 0, 0, 12, 12)
+        c.rect(2, 1, 8, 3, pal["band"])
+        c.rect(2, 4, 8, 4, SKIN); c.px(3, 6, OUTL)
+        c.rect(2, 8, 8, 3, pal["pants"])
+        c.outline()
+        save(S, pname)
 
 def gen_preview():
     """拼一张总览图供检查"""
@@ -526,7 +530,8 @@ def gen_preview():
 
 if __name__ == "__main__":
     print("生成像素素材 →", OUT)
-    gen_player(); gen_enemies(); gen_turret(); gen_items()
+    gen_player(P1_PAL, "player.png"); gen_player(P2_PAL, "player2.png")
+    gen_enemies(); gen_turret(); gen_items()
     gen_bullets(); gen_fx(); gen_boss(); gen_tiles(); gen_bg()
     gen_title(); gen_misc(); gen_preview()
     print("完成")

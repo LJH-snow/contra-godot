@@ -1,10 +1,13 @@
 extends Node
-## QA 补丁验证 (并行窗口产出): 分数入分 / 散弹5发 / 复活浮台掩码 / Boss单路径击破+入分
+## QA 补丁验证 (并行窗口产出):
+## 分数入分 / 散弹5发 / 复活浮台掩码 / 复活避水扫描 / 道具停浮台 /
+## 子弹被Boss墙挡 / Boss单路径击破+入分
 
 var game: Node2D
 var fails: Array[String] = []
 var step := 0
 var _wait := 0
+var _item: Area2D
 
 func _ready() -> void:
 	print("=== QA 补丁验证开始 ===")
@@ -64,10 +67,41 @@ func _physics_process(_d: float) -> void:
 				_next(3, 2)
 		3:
 			if _due():
+				# 相机放在水面缺口 (560..656) 内, 复活扫描应跳过缺口找到实地
+				game.cam_x = 590.0
+				game._respawn_player(game.player)
+				var px: float = game.player.position.x
+				check(game.has_floor(px, GameData.GROUND_Y) and px > 656.0,
+					"复活点避开水面缺口 (x=%.0f)" % px)
+				game.cam_x = 0.0
+				_next(4, 50)
+		4:
+			if _due():
+				_item = ItemBox.new()
+				_item.setup(Vector2(760, 120), GameData.W.M)
+				game.items_node.add_child(_item)
+				_item.vy = -60.0
+				_next(5, 70)
+		5:
+			if _due():
+				check(is_instance_valid(_item) and is_equal_approx(_item.position.y, 144.0),
+					"道具箱停在浮台顶 (y=%.1f)" % _item.position.y)
+				# 传送到 Boss 墙前平射, 子弹应被墙体挡下
+				var p3 = game.player
+				p3.weapon = GameData.W.NORMAL
+				p3.position = Vector2(3340, GameData.GROUND_Y)
+				p3.velocity = Vector2.ZERO
+				p3._try_shoot(game)
+				_next(6, 45)
+		6:
+			if _due():
+				check(game.boss_active, "Boss战已触发")
+				var n2: int = game.bullets_node.get_child_count()
+				check(n2 == 0, "子弹被Boss墙挡下 (余%d)" % n2)
 				Boot.score = 0
 				game.boss_core.kill()
-				_next(4, 160)
-		4:
+				_next(7, 160)
+		7:
 			if _due():
 				check(game.level_done, "Boss击破→关卡完成(信号单路径)")
 				check(Boot.score == GameData.SCORE_BOSS,

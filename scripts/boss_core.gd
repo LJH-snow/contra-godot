@@ -27,7 +27,10 @@ func set_open(o: bool) -> void:
 
 func _physics_process(delta: float) -> void:
 	_sprite.frame = 0 if not open else (1 - int(Time.get_ticks_msec() * 0.008) % 2)
-	var pl := get_tree().get_first_node_in_group("player")
+	var g := get_tree().get_first_node_in_group("game")
+	if g == null:
+		return
+	var pl: Node2D = g.nearest_player(global_position)
 	if pl == null:
 		return
 	if _burst > 0:
