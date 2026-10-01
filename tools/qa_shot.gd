@@ -56,18 +56,28 @@ func _physics_process(_d: float) -> void:
 		7:
 			_shot("14_prone")
 			Input.action_release("move_down")
+			p.position = Vector2(1450, GameData.GROUND_Y)   # 越过 1380 触发线, 吊桥前
+			p.velocity = Vector2.ZERO
+			_next(8, 150)                                   # 等生成+逼近
+		8:
+			_shot("15_gatling")
 			p.position = Vector2(3340, GameData.GROUND_Y)   # Boss 堡垒前
 			p.velocity = Vector2.ZERO
-			_next(8, 50)                                    # 等 Boss 触发
-		8:
-			game.boss_wall.close_gate()                     # 关闸: 闸门遮核心
-			_next(9, 8)
+			_next(9, 50)                                    # 等 Boss 触发
 		9:
-			_shot("15_boss_closed")
-			game.boss_wall.open_gate()                      # 开闸: 露出发光核心
-			p._try_shoot(game)
+			game.boss_wall.close_gate()                     # 关闸: 闸门遮核心
 			_next(10, 8)
 		10:
-			_shot("16_boss_open")
+			_shot("16_boss_closed")
+			game.boss_wall.open_gate()                      # 开闸: 露出发光核心
+			p._try_shoot(game)
+			_next(11, 8)
+		11:
+			_shot("17_boss_open")
+			Fx.make(game.world_node, p.position + Vector2(60, -34), "boom_big")
+			Fx.make(game.world_node, p.position + Vector2(130, -8), "boom")
+			_next(12, 9)
+		12:
+			_shot("18_explosion")
 			print("QA 截图完成")
 			get_tree().quit(0)

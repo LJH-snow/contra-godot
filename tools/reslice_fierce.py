@@ -144,6 +144,16 @@ def build_enemies():
     place(s, rk2, 1, 2, 0, scale=0.88)              # 13 胶囊·火箭 B
     return s
 
+# ---- 加特林 mini-boss 贴图 (2 帧旋转) ----
+def build_gatling():
+    F = foes.resize((foes.width // 2, foes.height // 2), Image.BOX)
+    g1 = crop_box(F, (135, 41, 159, 65))
+    g2 = crop_box(F, (161, 41, 185, 65))
+    tex = Image.new("RGBA", (48, 24), (0, 0, 0, 0))
+    tex.paste(g1, (0, 0), g1)
+    tex.paste(g2, (24, 0), g2)
+    tex.save(os.path.join(OUT, "enemy_gatling.png"))
+
 def build_all():
     p1 = build_player()
     p1.save(os.path.join(OUT, "player.png"))
@@ -151,7 +161,10 @@ def build_all():
     build_enemies().save(os.path.join(OUT, "enemies.png"))
     build_boss()
     build_deco()
-    print("已生成 player/player2/enemies/boss_wall/boss_core/deco")
+    build_fx()
+    build_life()
+    build_gatling()
+    print("已生成 player/player2/enemies/boss_wall/boss_core/deco/fx/life/gatling")
 
 # ---- 丛林装饰 (棕榈/灌木/草丛, 独立 PNG) ----
 def build_deco():
@@ -162,6 +175,42 @@ def build_deco():
                       ("deco_bush", (116, 2, 157, 33)),
                       ("deco_grass", (68, 63, 110, 83))]:
         crop_box(S, box).save(os.path.join(OUT, f"{name}.png"))
+
+# ---- 爆炸帧替换 fx.png 第一行 (Frogatto explosion3, 见 CREDITS.md) ----
+def key_out(img, tol=14):
+    """源帧背景不透明: 按角落色抠底"""
+    px = img.load()
+    bg = px[0, 0][:3]
+    w, h = img.size
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if abs(r - bg[0]) < tol and abs(g - bg[1]) < tol and abs(b - bg[2]) < tol:
+                px[x, y] = (0, 0, 0, 0)
+    return img
+
+def build_fx():
+    exp = Image.open(os.path.join(os.path.dirname(__file__),
+                      "asset_pack_fierce/originals/explosion3.png")).convert("RGBA")
+    # 小版动画: 两行各 5 帧, 每帧约 62x56
+    frames = []
+    for r, y0 in [(0, 188), (1, 246)]:
+        for c in range(5):
+            frames.append(key_out(exp.crop((c * 62, y0, (c + 1) * 62, y0 + 56))))
+    pick = [frames[i] for i in (0, 2, 3, 4, 5, 7)]         # 闪光→膨胀→火球→大→环→散
+    fx = Image.open(os.path.join(OUT, "fx.png")).convert("RGBA")
+    for i, f in enumerate(pick):
+        cell = Image.new("RGBA", (48, 48), (0, 0, 0, 0))
+        fit = f.resize((46, round(56 * 46 / 62)), Image.BOX)   # 适配 48 格
+        cell.paste(fit, (1, (48 - fit.height) // 2), fit)
+        fx.paste(cell, ((i % 6) * 48, (i // 6) * 48))          # 覆盖第 0 行 boom
+    fx.save(os.path.join(OUT, "fx.png"))
+
+# ---- HUD 生命图标: 主角头像 (从新 player 表裁头部, 自带透明底) ----
+def build_life():
+    p1 = Image.open(os.path.join(OUT, "player.png")).convert("RGBA")
+    head = crop_box(p1, (16, 0, 40, 20)).resize((12, 12), Image.BOX)
+    head.save(os.path.join(OUT, "life.png"))
 
 # ---- Boss 堡垒 + 核心 (phase 2) ----
 def build_boss():
