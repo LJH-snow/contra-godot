@@ -87,29 +87,7 @@ func _ready() -> void:
 	_hi.add_theme_color_override("font_outline_color", Color(0.05, 0.05, 0.1))
 	_hi.add_theme_constant_override("outline_size", 3)
 	add_child(_hi)
-	# 排行榜 TOP5 (左侧竖排)
-	var rk := Label.new()
-	rk.text = "- TOP 5 -"
-	rk.position = Vector2(8, 40)
-	rk.add_theme_font_size_override("font_size", 8)
-	rk.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
-	rk.add_theme_color_override("font_outline_color", Color(0.05, 0.05, 0.1))
-	rk.add_theme_constant_override("outline_size", 3)
-	add_child(rk)
-	var dn := ["E", "N", "H"]
-	for i in range(5):
-		var row := Label.new()
-		row.name = "Rank%d" % i
-		row.position = Vector2(8, 56 + i * 13)
-		row.add_theme_font_size_override("font_size", 8)
-		row.add_theme_color_override("font_color", Color(0.85, 0.87, 0.95))
-		row.add_theme_color_override("font_outline_color", Color(0.05, 0.05, 0.1))
-		row.add_theme_constant_override("outline_size", 2)
-		add_child(row)
 	_refresh()
-
-func _root_rank(i: int) -> Label:
-	return get_node_or_null("Rank%d" % i) as Label
 
 func _mkrect(tex: Texture2D, center: Vector2) -> TextureRect:
 	var t := TextureRect.new()
@@ -139,16 +117,6 @@ func _refresh() -> void:
 	_arrow.position.y = ROW_Y[_row]
 	_hint_single.visible = _mode == 1
 	_hint_two.visible = _mode == 2
-	for i in range(5):
-		var row := _root_rank(i)
-		if row == null:
-			continue
-		if i < Boot.leaderboard.size():
-			var e: Dictionary = Boot.leaderboard[i]
-			row.text = "%d %07d S%d L%d %s" % [i + 1, int(e.get("score", 0)),
-				int(e.get("stage", 1)), int(e.get("loop", 1)), DIFF_NAMES[clampi(int(e.get("diff", 1)), 0, 2)]]
-		else:
-			row.text = "%d ------" % (i + 1)
 
 func _set_row(r: int) -> void:
 	var nr := clampi(r, 0, 3)

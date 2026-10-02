@@ -111,7 +111,7 @@ static func _level_lair() -> Dictionary:
 		"vertical": false,
 		"w": 3488, "h": 240,
 		"grounds": [
-			Vector2i(0, 700), Vector2i(820, 1330), Vector2i(1560, 2280),
+			Vector2i(0, 756), Vector2i(820, 1496), Vector2i(1560, 2336),
 			Vector2i(2400, 3488),
 		],
 		"bridge": Vector2i(-1, -1),
@@ -143,7 +143,7 @@ static func _level_snow() -> Dictionary:
 	]
 	var snip: Array[Vector2i] = [
 		Vector2i(350, 200), Vector2i(860, 200), Vector2i(1250, 200),
-		Vector2i(1430, 116), Vector2i(1790, 200), Vector2i(2020, 116),
+		Vector2i(1430, 116), Vector2i(1850, 200), Vector2i(2020, 116),
 		Vector2i(2330, 200), Vector2i(2450, 116), Vector2i(2730, 200),
 		Vector2i(3050, 200),
 	]
@@ -157,8 +157,8 @@ static func _level_snow() -> Dictionary:
 		"vertical": false,
 		"w": 3488, "h": 240,
 		"grounds": [
-			Vector2i(0, 480), Vector2i(576, 1136), Vector2i(1232, 1744),
-			Vector2i(1840, 2288), Vector2i(2384, 2976), Vector2i(2976, 3488),
+			Vector2i(0, 512), Vector2i(576, 1168), Vector2i(1232, 1776),
+			Vector2i(1840, 2320), Vector2i(2384, 3040), Vector2i(3104, 3488),
 		],
 		"bridge": Vector2i(-1, -1),
 		"platforms": plats,
@@ -182,8 +182,8 @@ static func level_config(n: int) -> Dictionary:
 			"vertical": false,
 			"w": 3488, "h": 240,
 			"grounds": [
-				Vector2i(0, 560), Vector2i(656, 1184), Vector2i(1280, 1504),
-				Vector2i(1664, 2176), Vector2i(2288, 2976), Vector2i(2976, 3488),
+				Vector2i(0, 592), Vector2i(656, 1216), Vector2i(1280, 1504),
+				Vector2i(1664, 2208), Vector2i(2272, 2976), Vector2i(3040, 3488),
 			],
 			"bridge": Vector2i(1504, 1664),
 			"platforms": [
