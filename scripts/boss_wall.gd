@@ -17,18 +17,18 @@ func _ready() -> void:
 	_sprite.centered = false
 	add_child(_sprite)
 	# 中门金属闸门(关门时遮住核心; z_index 抬到敌人之上)
-	# 核心贴图以节点为中心 (28x28), 覆盖范围 x20..48 / y48..76, 闸门须盖住它
+	# 核心贴图以节点为中心 (28x28), 位于墙底左角 覆盖 x0..28 / y72..100, 闸门须盖住它
 	_shutter = Polygon2D.new()
 	_shutter.polygon = PackedVector2Array([
-		Vector2(16, 44), Vector2(52, 44), Vector2(52, 80), Vector2(16, 80)])
+		Vector2(-2, 70), Vector2(32, 70), Vector2(32, 102), Vector2(-2, 102)])
 	_shutter.color = Color(0.42, 0.42, 0.5)
 	_shutter.z_index = 20
 	add_child(_shutter)
 	for i in range(2):                          # 闸门铆钉条
 		var bar := Polygon2D.new()
 		bar.polygon = PackedVector2Array([
-			Vector2(22, 52 + i * 12), Vector2(46, 52 + i * 12),
-			Vector2(46, 55 + i * 12), Vector2(22, 55 + i * 12)])
+			Vector2(4, 78 + i * 12), Vector2(26, 78 + i * 12),
+			Vector2(26, 81 + i * 12), Vector2(4, 81 + i * 12)])
 		bar.color = Color(0.3, 0.3, 0.37)
 		_shutter.add_child(bar)
 
@@ -48,11 +48,12 @@ func close_gate() -> void:
 		_core.set_open(false)
 
 func build_shapes() -> void:
-	# 96 宽 x 104 高堡垒: 上下横梁 + 右柱; 左侧局部 y34..62 留作射击窗口,
-	# 子弹可穿过窗口命中门内核心 (局部 y37..59), 玩家身体被下横梁挡住
+	# 96 宽 x 104 高堡垒: 上横梁 + 右柱 + 右下横梁;
+	# 左下角 x0..30 留弹道凹槽直通核心 (站立平射 y≈185 全局 = 局部 y≈89 可命中),
+	# 玩家贸然走进凹槽会触到核心 (接触即死, 与官方一致)
 	for meta in [[Vector2(48, 17), Vector2(96, 34)],
-			[Vector2(48, 83), Vector2(96, 42)],
-			[Vector2(76, 48), Vector2(40, 28)]]:
+			[Vector2(76, 48), Vector2(40, 28)],
+			[Vector2(63, 83), Vector2(66, 42)]]:
 		var cs := CollisionShape2D.new()
 		var sh := RectangleShape2D.new()
 		sh.size = meta[1]

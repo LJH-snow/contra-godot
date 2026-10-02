@@ -93,38 +93,12 @@ func _physics_process(_d: float) -> void:
 			if _due():
 				_reset_score()
 				game.player.position = Vector2(2520.0, GameData.GROUND_Y)
-				game.get_node("Director").set("_strike_cd", 0.0)
-				_next(6, 3)
+				_next(6, 60)
 		6:
 			if _due():
+				# 空袭导弹已按用户要求移除: 桥后区域不应再出现任何导弹
 				var missiles := get_tree().get_nodes_in_group("air_missile")
-				check(missiles.size() == 2, "桥后空袭生成双导弹 (实际%d)" % missiles.size())
-				if missiles.size() >= 2:
-					_test_missile = missiles[0]
-					_test_missile.position = Vector2(2450.0, 70.0)
-					_missile_dir_before = _test_missile.dir
-					game.player.position.x = 2460.0
-					_impact_missile = missiles[1]
-					_impact_missile.impacted.connect(func(): _missile_impacted = true)
-					_impact_missile.position = Vector2(2600.0, GameData.GROUND_Y - 20.0)
-					_impact_missile.dir = Vector2.DOWN
-				_next(7, 8)
-		7:
-			if _due():
-				if is_instance_valid(_test_missile):
-					check(_test_missile.dir != _missile_dir_before, "追踪导弹会随玩家位置转向")
-					_reset_score()
-					var bullet := Bullet.new()
-					bullet.setup(_test_missile.position, Vector2.RIGHT, GameData.W.NORMAL)
-					game.bullets_node.add_child(bullet)
-					bullet._on_body(_test_missile)
-					check(Boot.score == 150, "击落导弹入分 150 (score=%d)" % Boot.score)
-				else:
-					check(false, "追踪导弹在镜头内存活")
-				_next(8, 12)
-		8:
-			if _due():
-				check(_missile_impacted, "导弹触地爆炸")
+				check(missiles.is_empty(), "空袭已移除: 桥后无导弹 (实际%d)" % missiles.size())
 				print("=== mini-boss 与空袭验证结束: %d 失败 ===" % fails.size())
 				for f in fails:
 					print("  失败项: ", f)

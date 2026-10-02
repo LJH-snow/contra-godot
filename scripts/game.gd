@@ -347,14 +347,15 @@ func _build_statics() -> void:
 	# Boss
 	if L_VERTICAL:
 		# 瀑布顶要塞: 裸核心 (闸门由核心开合表现)
-		_make_core(cfg["boss_pos"] + Vector2(48, 56), 30)
+		_make_core(cfg["boss_pos"] + Vector2(48, 100), 30)   # 核心落进屏内, 站顶台直射可及
 	else:
 		boss_wall = StaticBody2D.new()
 		boss_wall.set_script(preload("res://scripts/boss_wall.gd"))
 		boss_wall.position = cfg["boss_pos"]
 		world_node.add_child(boss_wall)
 		boss_wall.build_shapes()
-		_make_core(Vector2(cfg["boss_pos"].x + 48 - 14, L_GROUND_Y - 42),
+		# 核心嵌在墙底左角, 与站立平射弹道同高 (官方设计: Boss 弱点在平射带内)
+		_make_core(Vector2(cfg["boss_pos"].x + 14, L_GROUND_Y - 18),
 			int(cfg.get("boss_hp", 30)))
 		if cfg.has("boss_tint"):
 			boss_core.modulate = cfg["boss_tint"]   # 心脏配色
@@ -424,11 +425,9 @@ func _process(delta: float) -> void:
 	if level_done:
 		_end_t += delta
 		return
-	if _intro_t > 0.0:
-		_intro_t -= delta
-		return
 
 	# 相机: 横向跟随最靠前者只进不退; 纵向棘轮只上不下
+	# (intro 期间相机照常跟随, 避免开场玩家先走、相机后追的"衔接不上")
 	var alive := alive_players()
 	if L_VERTICAL:
 		var top_y := INF
@@ -447,10 +446,15 @@ func _process(delta: float) -> void:
 		cam_x = maxf(cam_x, target)
 		position = Vector2(-cam_x, 0)
 
+	# 开场 intro: 只暂停刷怪与 Boss 触发, 相机不冻结
+	if _intro_t > 0.0:
+		_intro_t -= delta
+		return
+
 	# 敌人波次 (难度影响刷新间隔)
 	_spawn_t -= delta
 	if _spawn_t <= 0.0 and not boss_active:
-		_spawn_t = maxf(1.15, 2.1 - Boot.loop_count * 0.18) * GameData.diff_spawn()
+		_spawn_t = maxf(1.5, 2.7 - Boot.loop_count * 0.15) * GameData.diff_spawn()
 		_spawn_wave()
 	# 胶囊
 	_capsule_t -= delta
@@ -529,6 +533,8 @@ func _toggle_gate() -> void:
 			_gate_timer.stop()
 		return
 	_gate_open = not _gate_open
+	# 不对称开合: 开门 3.6s 足够输出, 关门 2.2s 稍作喘息
+	_gate_timer.wait_time = 3.6 if _gate_open else 2.2
 	if _gate_open:
 		if boss_wall != null:
 			boss_wall.open_gate()

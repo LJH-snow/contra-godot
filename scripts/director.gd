@@ -5,7 +5,6 @@ extends Node2D
 
 var _gatling_done := false
 var _tank_done := false
-var _strike_cd := 4.0
 
 func _physics_process(delta: float) -> void:
 	var g := get_tree().get_first_node_in_group("game")
@@ -24,12 +23,6 @@ func _physics_process(delta: float) -> void:
 	# 碾压坦克: 炮塔区之后的长平地段出现一次
 	if not _tank_done and not g.boss_active and lead.position.x > 2380.0:
 		_spawn_tank(lead)
-	# 空袭导弹: 吊桥后到 Boss 区前周期来袭
-	if not g.boss_active and lead.position.x > 1700.0 and lead.position.x < GameData.BOSS_TRIGGER - 100.0:
-		_strike_cd -= delta
-		if _strike_cd <= 0.0:
-			_spawn_air_strike(lead)
-			_strike_cd = randf_range(12.0, 16.0)
 
 func _spawn_gatling(lead: Player) -> void:
 	_gatling_done = true
@@ -50,13 +43,3 @@ func _spawn_tank(lead: Player) -> void:
 		return
 	g.enemies_node.add_child(e)
 	e.died.connect(func(s: int): Boot.score += s)
-
-func _spawn_air_strike(lead: Player) -> void:
-	var g := get_tree().get_first_node_in_group("game")
-	if g == null:
-		return
-	for offset in [-96.0, 96.0]:
-		var e := EnemyMissile.new()
-		e.setup(Vector2(lead.position.x + offset, -18.0), lead.position)
-		g.enemies_node.add_child(e)
-		e.died.connect(func(s: int): Boot.score += s)

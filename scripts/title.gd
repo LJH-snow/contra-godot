@@ -33,6 +33,8 @@ func _ready() -> void:
 	Boot.loop_count = 1
 	Boot.player_count = 1
 	Boot.play_music("music_title", -6.0)
+	# 后台预载游戏主场景: 玩家按开始时资源已在缓存, 消除进游戏首帧的卡顿
+	ResourceLoader.load_threaded_request("res://scenes/main.tscn")
 	var bg := Sprite2D.new()
 	bg.texture = preload("res://assets/sprites/bg_sky.png")
 	bg.centered = false
@@ -199,7 +201,13 @@ func _start() -> void:
 	Boot.level = _stage
 	Boot.start_lives = 30 if _activated else GameData.diff_lives()
 	Boot.score = 0
-	get_tree().change_scene_to_file("res://scenes/main.tscn")
+	# 预载已完成则直接用缓存场景; 未完成 load 会阻塞到完成 (通常已就绪)
+	if ResourceLoader.load_threaded_get_status("res://scenes/main.tscn") \
+			== ResourceLoader.THREAD_LOAD_LOADED:
+		get_tree().change_scene_to_packed(
+			ResourceLoader.load_threaded_get("res://scenes/main.tscn"))
+	else:
+		get_tree().change_scene_to_file("res://scenes/main.tscn")
 
 func _process(delta: float) -> void:
 	_blink_t += delta

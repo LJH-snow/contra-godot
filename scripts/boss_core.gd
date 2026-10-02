@@ -6,7 +6,7 @@ signal boss_destroyed
 const SHEET := preload("res://assets/sprites/boss_core.png")
 
 var open := false
-var fire_int := 1.5
+var fire_int := 1.8
 var enraged := false                  # 半血以下狂暴: 射速翻倍+五连弹幕
 var _t := 2.0
 var _burst := 0
@@ -20,7 +20,7 @@ func _ready() -> void:
 	max_hp = hp
 	score_val = GameData.SCORE_BOSS
 	make_sprite(SHEET, 0, 2, 1)
-	make_body_shape(22, 22, -14)
+	make_body_shape(24, 24, 0)          # 与站立平射弹道(y≈185)同高
 	_t = 2.2
 
 func set_open(o: bool) -> void:
@@ -61,7 +61,7 @@ func _fire(pl: Node2D) -> void:
 		var eb := EBullet.new()
 		g.enemies_node.add_child(eb)
 		eb.setup(global_position + Vector2(0, -14) + d * 12.0, d.rotated(off),
-			150.0 * GameData.fire_scale(Boot.loop_count))
+			130.0 * GameData.fire_scale(Boot.loop_count))
 	Boot.play_sfx("sfx_clang", -2.0)
 
 func damage(amt: int, dir: Vector2) -> void:

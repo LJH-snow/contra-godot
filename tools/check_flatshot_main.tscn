@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://contra_flatshot"]
+
+[ext_resource type="Script" path="res://tools/check_flatshot.gd" id="1_flat"]
+
+[node name="FlatShotCheck" type="Node"]
+script = ExtResource("1_flat")

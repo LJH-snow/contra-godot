@@ -79,16 +79,16 @@ static func diff_index() -> int:
 	return Boot.difficulty if Boot != null else 1
 
 static func diff_fire() -> float:
-	return [0.75, 1.0, 1.3][clampi(diff_index(), 0, 2)]
+	return [0.7, 0.85, 1.2][clampi(diff_index(), 0, 2)]
 
 static func diff_speed() -> float:
-	return [0.85, 1.0, 1.15][clampi(diff_index(), 0, 2)]
+	return [0.8, 0.9, 1.1][clampi(diff_index(), 0, 2)]
 
 static func diff_spawn() -> float:
-	return [1.25, 1.0, 0.8][clampi(diff_index(), 0, 2)]   # 刷新间隔倍率(越难越快)
+	return [1.45, 1.15, 0.85][clampi(diff_index(), 0, 2)]   # 刷新间隔倍率(越难越快)
 
 static func diff_lives() -> int:
-	return [5, 3, 2][clampi(diff_index(), 0, 2)]
+	return [6, 4, 3][clampi(diff_index(), 0, 2)]
 
 # ---------------- 关卡配置 ----------------
 ## 异形巢穴: 洞穴横向, 卵巢孵化小兵, 终点心脏 Boss
