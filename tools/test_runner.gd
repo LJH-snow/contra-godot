@@ -122,6 +122,8 @@ func _physics_process(_d: float) -> void:
 				if game.bridge != null:
 					check(game.bridge._lit >= 0, "吊桥逐段爆炸(已炸%d段)" % (game.bridge._lit + 1))
 				# 走到墙前(模拟真实推进, 相机到位后核心才在射程内)
+				game.player.swim = false               # 桥断落水会进游泳态, 清掉以免泳钳制拽回传送
+				game.player.submerged = false
 				game.player.position = Vector2(3300, GameData.GROUND_Y - 30)
 				game.player.velocity = Vector2.ZERO
 				if game.player.dead:

@@ -11,6 +11,8 @@ const MSG := {
 	"clear": preload("res://assets/text/clear.png"),
 	"gameover": preload("res://assets/text/gameover.png"),
 	"eagle": preload("res://assets/text/eagle.png"),
+	"oneup": preload("res://assets/text/oneup.png"),
+	"swim": preload("res://assets/text/swim.png"),
 }
 const WEAPON_LABEL := {0: "R", 1: "M", 2: "S", 3: "L", 4: "F", 5: "R+", 6: "B", 7: "★"}
 

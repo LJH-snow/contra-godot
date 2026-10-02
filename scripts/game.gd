@@ -57,6 +57,8 @@ var _wig_i := 0
 var _end_t := 0.0
 var _intro_t := 2.0
 var _gate_timer: Timer
+var _rock_t := 2.5                         # 瀑布滚石计时
+var _capsule_n := 0                        # 胶囊计数 (每 3 次出震天鹰编队)
 
 # HUD 引用(由 main.tscn 提供)
 @onready var hud: CanvasLayer = $HUD
@@ -344,6 +346,11 @@ func _build_statics() -> void:
 		tu.position = Vector2(t.x, t.y)
 		enemies_node.add_child(tu)
 		_hook_score(tu)
+	# 开花弹兵 (不可击毙, 只能躲)
+	for b in cfg.get("blossoms", []):
+		var bl := EnemyBlossom.new()
+		bl.position = Vector2(b.x, b.y)
+		enemies_node.add_child(bl)
 	# Boss
 	if L_VERTICAL:
 		# 瀑布顶要塞: 裸核心 (闸门由核心开合表现)
@@ -407,6 +414,13 @@ func floor_y_at(x: float, y_near: float) -> float:
 		best = L_GROUND_Y
 	return best
 
+func on_platform_at(x: float, y: float) -> bool:
+	# 玩家脚下是否为单向浮台 (↓+跳 下落穿透判定)
+	for p in L_PLATFORMS:
+		if x >= p.x - 2.0 and x <= p.x + p.z + 2.0 and absf(y - p.y) <= 6.0:
+			return true
+	return false
+
 # ---------------- 帧循环 ----------------
 func _physics_process(delta: float) -> void:
 	# 复活倒计时用物理步长, 保证计时精确
@@ -456,13 +470,32 @@ func _process(delta: float) -> void:
 	if _spawn_t <= 0.0 and not boss_active:
 		_spawn_t = maxf(1.5, 2.7 - Boot.loop_count * 0.15) * GameData.diff_spawn()
 		_spawn_wave()
-	# 胶囊
+	# 胶囊 (每 3 次出一组震天鹰编队: 打中间金鹰 = 清屏 + 1 命)
 	_capsule_t -= delta
 	if _capsule_t <= 0.0 and not boss_active:
 		_capsule_t = 11.0 + randf() * 5.0
-		var cap := EnemyCapsule.new()
-		enemies_node.add_child(cap)
-		_hook_score(cap)
+		_capsule_n += 1
+		if _capsule_n % 3 == 0:
+			var base_y := 60.0 + randf() * 30.0
+			for k in range(3):
+				var eg := EnemyEagle.new()
+				eg.setup_formation(Vector2(cam_x - 24.0 - k * 36.0, base_y), k == 0, base_y)
+				enemies_node.add_child(eg)
+				_hook_score(eg)
+		else:
+			var cap := EnemyCapsule.new()
+			enemies_node.add_child(cap)
+			_hook_score(cap)
+
+	# 瀑布滚石 (纵向关专属: 从视野上缘随机坠落)
+	if L_VERTICAL and not boss_active:
+		_rock_t -= delta
+		if _rock_t <= 0.0:
+			_rock_t = 1.7 + randf() * 1.4
+			var rk := EnemyRock.new()
+			rk.position = Vector2(randf_range(24.0, L_W - 24.0), cam_y - 20.0)
+			enemies_node.add_child(rk)
+			_hook_score(rk)
 
 	# Boss 触发: 横向到达警戒线 / 纵向爬到要塞高度
 	if not boss_active and not alive.is_empty():
@@ -479,7 +512,7 @@ func _spawn_wave() -> void:
 	var count := 1 + (randi() % 2) + (1 if Boot.loop_count > 1 else 0)
 	var side := 1 if randf() < 0.72 else -1       # 多数从右侧来
 	for i in range(count):
-		var e := EnemyRunner.new()
+		var e := _make_wave_enemy()
 		var sx: float
 		if side > 0:
 			sx = cam_x + 340.0 + i * 22.0
@@ -491,6 +524,19 @@ func _spawn_wave() -> void:
 		e.position = Vector2(sx, L_GROUND_Y - 40.0)
 		enemies_node.add_child(e)
 		_hook_score(e)
+
+## 官方敌兵谱系: 跑兵为主, 混入红兵(掉枪)/跳兵/手雷兵
+func _make_wave_enemy() -> EnemyRunner:
+	var r := randf()
+	if r < 0.12:
+		var red := EnemyRunner.new()
+		red.drops_weapon = true
+		return red
+	elif r < 0.30:
+		return EnemyJumper.new()
+	elif r < 0.42:
+		return EnemyGrenadier.new()
+	return EnemyRunner.new()
 
 ## 纵向关: 从视野上缘的平台刷出, 走落攻击
 func _spawn_wave_vertical() -> void:
@@ -597,7 +643,9 @@ func eagle_wipe() -> void:
 	Boot.play_sfx("sfx_eagle")
 	hud.call("flash_message", "eagle", 1.2)
 	for e in get_tree().get_nodes_in_group("enemies"):
-		if e is Enemy and not (e is BossCore):
+		# 核心与开花弹兵不可击毙, 滚石非敌不触发彩蛋
+		if e is Enemy and not (e is BossCore) and not (e is EnemyBlossom) \
+				and not (e is EnemyRock):
 			e.kill()
 	# 清空敌弹
 	for n in enemies_node.get_children():

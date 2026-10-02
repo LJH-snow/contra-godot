@@ -32,6 +32,12 @@ var _fire_cd := 0.0
 var _fire_hold := false
 var _laser_block := false
 
+# 机动特技
+var _drop_t := 0.0                        # ↓+跳: 下落穿透浮台计时
+var swim := false                         # 浮于水面 (可被击中, 不能射击)
+var submerged := false                    # 下潜 (完全免疫子弹, 不能射击)
+var _ripple_t := 0.0
+
 # 动画
 var _anim_t := 0.0
 var _tumble_a := 0.0
@@ -111,6 +117,22 @@ func _physics_process(delta: float) -> void:
 
 	var g := get_tree().get_first_node_in_group("game")
 
+	# 下落穿透: 穿透期间忽略浮台碰撞, 计时结束后恢复
+	if _drop_t > 0.0:
+		_drop_t -= delta
+		if _drop_t <= 0.0:
+			collision_mask = GameData.L_WORLD | GameData.L_PLATFORM
+
+	# 水域: 落入即入水游泳 (纵向关除外, 落底即死)
+	if g != null and not g.L_VERTICAL and velocity.y > 0.0 \
+			and position.y >= g.L_GROUND_Y + 6.0 \
+			and not g.has_floor(position.x, position.y):
+		_enter_water(g)
+		return
+	if swim or submerged:
+		_swim_tick(delta, g)
+		return
+
 	# 重力
 	velocity.y = minf(velocity.y + 860.0 * delta, 460.0)
 
@@ -128,10 +150,19 @@ func _physics_process(delta: float) -> void:
 			facing = 1 if ax > 0.0 else -1
 
 	# 跳跃 (可变高度, 满跳约 88px: 可从地面直接跳上两层浮台)
+	# ↓+跳: 站在单向浮台上时改为下落穿透 (官方手感)
 	if ctrl and Input.is_action_just_pressed(_act("jump")) and on_ground:
-		velocity.y = -390.0
-		on_ground = false
-		Boot.play_sfx("sfx_jump", -6.0)
+		if Input.is_action_pressed(_act("down")) and g != null \
+				and g.on_platform_at(position.x, position.y):
+			_drop_t = 0.26
+			on_ground = false
+			collision_mask = GameData.L_WORLD   # 立即忽略浮台, 本帧起下落
+			position.y += 3.0
+			velocity = Vector2(velocity.x, 60.0)
+		else:
+			velocity.y = -390.0
+			on_ground = false
+			Boot.play_sfx("sfx_jump", -6.0)
 	if velocity.y < 0.0 and not Input.is_action_pressed(_act("jump")):
 		velocity.y += 950.0 * delta
 
@@ -165,6 +196,55 @@ func _poll_hurt() -> void:
 		hurt(b)
 	for a in _hurtbox.get_overlapping_areas():
 		hurt(a)
+
+# ---------------- 水域: 游泳 / 潜水 ----------------
+func _enter_water(g: Node) -> void:
+	swim = true
+	submerged = false
+	velocity = Vector2.ZERO
+	position.y = g.L_GROUND_Y + 10.0
+	Fx.make(get_parent(), Vector2(position.x, g.L_GROUND_Y + 2.0), "splash")
+	Boot.play_sfx("sfx_splash", -2.0)
+	hud_swim_hint(g)
+
+func hud_swim_hint(g: Node) -> void:
+	if g.hud != null:
+		g.hud.call("flash_message", "swim", 1.2)
+
+## 游泳/潜水: 不受重力不能射击; 下潜免疫子弹; 按跳跃键跃出水面
+func _swim_tick(delta: float, g: Node) -> void:
+	var ax := _axis_x() if ctrl else 0.0
+	if ax != 0.0:
+		facing = 1 if ax > 0.0 else -1
+	if ctrl and Input.is_action_just_pressed(_act("jump")):
+		swim = false
+		submerged = false
+		position.y = g.L_GROUND_Y + 2.0
+		velocity = Vector2(ax * 90.0, -320.0)
+		Boot.play_sfx("sfx_splash", -5.0)
+		return
+	submerged = ctrl and Input.is_action_pressed(_act("down"))
+	position.x += ax * (42.0 if submerged else 55.0) * delta
+	position.x = clampf(position.x, g.cam_x + 8.0, g.cam_x + 312.0)
+	position.y = g.L_GROUND_Y + (14.0 if submerged else 10.0)
+	# 游到岸边: 自动跃上地面
+	if g.has_floor(position.x, position.y):
+		swim = false
+		submerged = false
+		position.y = g.L_GROUND_Y
+		velocity = Vector2.ZERO
+		return
+	_ripple_t -= delta
+	if _ripple_t <= 0.0:
+		_ripple_t = 0.4
+		Fx.make(get_parent(), Vector2(position.x, g.L_GROUND_Y + 2.0), "splash", 0.8)
+	# 姿态: 水面用卧姿, 下潜只露水花
+	_sprite.visible = not submerged and (invuln_t <= 0.0 \
+		or int(Time.get_ticks_msec() * 0.02) % 2 == 0)
+	_sprite.flip_h = facing < 0
+	if not submerged:
+		_sprite.frame = 24
+		_poll_hurt()                         # 浮于水面可被击中; 下潜完全免疫
 
 func _update_ground(_g: Node) -> void:
 	on_ground = is_on_floor()
@@ -271,6 +351,10 @@ func die(fell: bool) -> void:
 	dead = true
 	shield_t = 0.0
 	invuln_t = 0.0
+	swim = false
+	submerged = false
+	_drop_t = 0.0
+	collision_mask = GameData.L_WORLD
 	_ring.visible = false
 	velocity = Vector2(facing * -55.0, -260.0)   # 经典向后飞出
 	collision_layer = 0
@@ -306,6 +390,9 @@ func respawn(at: Vector2) -> void:
 	ctrl = true
 	collision_layer = GameData.L_PLAYER
 	collision_mask = GameData.L_WORLD | GameData.L_PLATFORM
+	swim = false
+	submerged = false
+	_drop_t = 0.0
 	_tumble_a = 0.0
 
 # ---------------- 道具 ----------------

@@ -5,6 +5,7 @@ const SHEET := preload("res://assets/sprites/enemies.png")
 
 var run_dir := -1
 var run_speed := 62.0
+var drops_weapon := false                   # 红兵: 击杀掉武器箱
 var _anim_t := 0.0
 var _fire_t := 1.5
 var _stop_t := 0.0
@@ -16,6 +17,8 @@ func _ready() -> void:
 	score_val = GameData.SCORE_RUNNER
 	make_sprite(SHEET, 0, 6, 3)
 	make_body_shape(10, 26, -13)
+	if drops_weapon:
+		_sprite.self_modulate = Color(1.7, 0.5, 0.5)   # 红兵标识
 	run_speed = (55.0 + randf() * 28.0) * GameData.speed_scale(Boot.loop_count)
 	if randf() < 0.12:
 		run_dir = 1
@@ -63,6 +66,13 @@ func _physics_process(delta: float) -> void:
 		return
 	if g != null and (position.x < g.cam_x - 100.0 or position.x > g.cam_x + 440.0):
 		queue_free()
+
+func kill() -> void:
+	if drops_weapon:                             # 红兵: 击杀掉武器箱
+		var g := get_tree().get_first_node_in_group("game")
+		if g != null:
+			g.spawn_item(global_position)
+	super.kill()
 
 func L_GROUND_Y_FALL() -> float:
 	var g := get_tree().get_first_node_in_group("game")

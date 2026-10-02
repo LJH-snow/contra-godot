@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://contra_tier"]
+
+[ext_resource type="Script" path="res://tools/check_tier.gd" id="1_tier"]
+
+[node name="TierCheck" type="Node"]
+script = ExtResource("1_tier")

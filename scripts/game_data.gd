@@ -105,6 +105,9 @@ static func _level_lair() -> Dictionary:
 	var turb: Array[Vector2i] = [
 		Vector2i(1100, 200), Vector2i(2200, 200), Vector2i(3200, 200),
 	]
+	var blos: Array[Vector2i] = [
+		Vector2i(1490, 200), Vector2i(2320, 200), Vector2i(2800, 116),
+	]
 	return {
 		"name": "FINAL  巢穴",
 		"key": "mission4",
@@ -124,6 +127,7 @@ static func _level_lair() -> Dictionary:
 		"snipers": snip,
 		"turrets": turb,
 		"pods": pods,
+		"blossoms": blos,
 		"boss_pos": Vector2(3392, 24),
 		"boss_trigger": 3088.0,
 		"boss_hp": 60,
@@ -151,6 +155,11 @@ static func _level_snow() -> Dictionary:
 		Vector2i(1050, 200), Vector2i(1650, 200), Vector2i(2150, 200),
 		Vector2i(2600, 200), Vector2i(3120, 200), Vector2i(3260, 200),
 	]
+	# 开花弹兵: 雪原关特色, 不可击毙只能躲
+	var blos: Array[Vector2i] = [
+		Vector2i(640, 200), Vector2i(1180, 200), Vector2i(1700, 200),
+		Vector2i(2250, 200), Vector2i(2900, 200), Vector2i(3180, 200),
+	]
 	return {
 		"name": "MISSION 3  雪原",
 		"key": "mission3",
@@ -164,6 +173,7 @@ static func _level_snow() -> Dictionary:
 		"platforms": plats,
 		"snipers": snip,
 		"turrets": turb,
+		"blossoms": blos,
 		"boss_pos": Vector2(3392, 24),
 		"boss_trigger": 3088.0,
 		"ground_y": 200, "fall_line": 252.0,
@@ -198,6 +208,9 @@ static func level_config(n: int) -> Dictionary:
 				Vector2i(420, 200), Vector2i(1096, 200), Vector2i(1370, 200),
 				Vector2i(2064, 200), Vector2i(2544, 116), Vector2i(2700, 144),
 				Vector2i(2920, 200), Vector2i(3120, 200),
+			],
+			"blossoms": [
+				Vector2i(1490, 200), Vector2i(2320, 200), Vector2i(2800, 116),
 			],
 			"turrets": [
 				Vector2i(928, 200), Vector2i(2080, 200), Vector2i(2384, 200),

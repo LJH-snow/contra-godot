@@ -15,7 +15,8 @@ func _ready() -> void:
 	_base_y = 56.0 + randf() * 60.0
 	_amp = 20.0 + randf() * 18.0
 	_freq = 2.4 + randf() * 1.6
-	position = Vector2(-24, _base_y)
+	var g := get_tree().get_first_node_in_group("game")
+	position = Vector2((g.cam_x - 24.0) if g != null else -24.0, _base_y)
 	make_sprite(SHEET, 12, 6, 3)               # 行2: 胶囊帧12/13
 	make_body_shape(14, 12, 0)
 	z_index = 5
@@ -25,7 +26,8 @@ func _physics_process(delta: float) -> void:
 	position.x += 105.0 * delta
 	position.y = _base_y + sin(t * _freq) * _amp
 	_sprite.frame = 12 + (int(t * 10.0) % 2)
-	if position.x > 400.0:
+	var g := get_tree().get_first_node_in_group("game")
+	if position.x > ((g.cam_x + 440.0) if g != null else 400.0):
 		queue_free()
 
 func kill() -> void:
