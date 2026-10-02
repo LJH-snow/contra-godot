@@ -17,7 +17,7 @@ func build(x0: float, y: float, n: int) -> void:
 		var s := Sprite2D.new()
 		s.texture = preload("res://assets/sprites/tile_bridge.png")
 		s.centered = false
-		s.position = Vector2(-8, 0)
+		s.position = Vector2(-8, -8)      # 桥板抬到水线上方, 不再视觉半沉
 		b.add_child(s)
 		var cs := CollisionShape2D.new()
 		var sh := RectangleShape2D.new()

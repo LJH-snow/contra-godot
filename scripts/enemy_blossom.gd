@@ -14,11 +14,21 @@ func _ready() -> void:
 	make_sprite(SHEET, 7, 6, 3)              # 开火姿态帧
 	make_body_shape(12, 24, -12)
 	z_index = 3
+	# 头顶脉动花苞: 提示"此兵特殊, 不可击毙"
+	_bud = Sprite2D.new()
+	_bud.texture = preload("res://assets/sprites/alien_pod_0.png")
+	_bud.position = Vector2(0, -34)
+	_bud.scale = Vector2(0.8, 0.8)
+	add_child(_bud)
+
+var _bud: Sprite2D
 
 func _physics_process(delta: float) -> void:
 	_pulse += delta
 	_sprite.self_modulate = Color(1.0, 0.62, 0.72) \
 		if fmod(_pulse, 1.0) < 0.5 else Color(0.9, 0.45, 0.6)
+	_bud.position.y = -34.0 + sin(_pulse * 4.0) * 2.0
+	_bud.modulate.a = 0.75 + 0.25 * sin(_pulse * 6.0)
 	var g := get_tree().get_first_node_in_group("game")
 	if g == null:
 		return

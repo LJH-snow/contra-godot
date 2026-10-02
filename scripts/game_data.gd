@@ -210,7 +210,7 @@ static func level_config(n: int) -> Dictionary:
 				Vector2i(2920, 200), Vector2i(3120, 200),
 			],
 			"blossoms": [
-				Vector2i(1490, 200), Vector2i(2320, 200), Vector2i(2800, 116),
+				Vector2i(1420, 200), Vector2i(2320, 200), Vector2i(2800, 116),
 			],
 			"turrets": [
 				Vector2i(928, 200), Vector2i(2080, 200), Vector2i(2384, 200),
