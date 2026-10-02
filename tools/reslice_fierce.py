@@ -154,6 +154,17 @@ def build_gatling():
     tex.paste(g2, (24, 0), g2)
     tex.save(os.path.join(OUT, "enemy_gatling.png"))
 
+# ---- 坦克 mini-boss 贴图 ----
+def build_tank():
+    F = foes.resize((foes.width // 2, foes.height // 2), Image.BOX)
+    crop_box(F, (134, 72, 223, 120)).save(os.path.join(OUT, "enemy_tank.png"))
+
+# ---- 空袭追踪导弹贴图 ----
+def build_missile():
+    S = C("originals/fierce_soldier_sprites_-_scenery_and_gui.png")
+    S = S.resize((S.width // 2, S.height // 2), Image.BOX)
+    crop_box(S, (127, 62, 132, 83)).save(os.path.join(OUT, "enemy_missile.png"))
+
 def build_all():
     p1 = build_player()
     p1.save(os.path.join(OUT, "player.png"))
@@ -164,7 +175,9 @@ def build_all():
     build_fx()
     build_life()
     build_gatling()
-    print("已生成 player/player2/enemies/boss_wall/boss_core/deco/fx/life/gatling")
+    build_tank()
+    build_missile()
+    print("已生成 player/player2/enemies/boss_wall/boss_core/deco/fx/life/gatling/tank/missile")
 
 # ---- 丛林装饰 (棕榈/灌木/草丛, 独立 PNG) ----
 def build_deco():

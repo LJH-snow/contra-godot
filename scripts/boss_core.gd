@@ -7,6 +7,7 @@ const SHEET := preload("res://assets/sprites/boss_core.png")
 
 var open := false
 var fire_int := 1.5
+var enraged := false                  # 半血以下狂暴: 射速翻倍+五连弹幕
 var _t := 2.0
 var _burst := 0
 var _burst_t := 0.0
@@ -42,16 +43,21 @@ func _physics_process(delta: float) -> void:
 	elif open:
 		_t -= delta
 		if _t <= 0.0:
-			_t = fire_int * (0.9 + randf() * 0.25)
-			_burst = 3
+			_t = fire_interval() * (0.9 + randf() * 0.25)
+			_burst = 5 if enraged else 3
 			_burst_t = 0.05
+
+## 半血以下狂暴: 射速翻倍, 五连弹幕, 闪光提示
+func fire_interval() -> float:
+	return fire_int * (0.5 if enraged else 1.0)
 
 func _fire(pl: Node2D) -> void:
 	var g := get_tree().get_first_node_in_group("game")
 	if g == null:
 		return
 	var d := (pl.global_position + Vector2(0, -12) - (global_position + Vector2(0, -14))).normalized()
-	for off in [-0.16, 0.0, 0.16]:
+	var offs: Array = [-0.28, -0.14, 0.0, 0.14, 0.28] if enraged else [-0.16, 0.0, 0.16]
+	for off in offs:
 		var eb := EBullet.new()
 		g.enemies_node.add_child(eb)
 		eb.setup(global_position + Vector2(0, -14) + d * 12.0, d.rotated(off),
@@ -68,6 +74,12 @@ func damage(amt: int, dir: Vector2) -> void:
 	var g := get_tree().get_first_node_in_group("game")
 	if g != null:
 		g.boss_hp_changed(hp, max_hp)
+	if not enraged and hp <= max_hp / 2 and hp > 0:
+		enraged = true
+		_flash = 0.3
+		if g != null:
+			g.hud.call("flash_message", "enrage", 1.2)
+		Boot.play_sfx("sfx_eagle", -4.0)
 	if hp <= 0:
 		kill()
 

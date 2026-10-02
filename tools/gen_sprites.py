@@ -454,6 +454,102 @@ def gen_bg():
         d.ellipse((x + 2, 80 - h - 10, x + 20, 80 - h + 6), fill=(16, 34, 30))
     S.save(os.path.join(OUT, "bg_near.png")); print("  bg_near.png           320x80")
 
+# ---------------- 瀑布关背景 ----------------
+def gen_waterfall():
+    import random
+    random.seed(23)
+    OUT2 = os.path.join(ROOT, "assets", "sprites")
+    # 崖壁 (可纵向平铺 320x256): 深色岩壁 + 苔藓 + 横向岩层
+    S = Image.new("RGBA", (320, 256))
+    d = ImageDraw.Draw(S)
+    d.rectangle((0, 0, 320, 256), fill=(38, 46, 44))
+    for yy in range(0, 256, 24):                    # 岩层横缝
+        d.line((0, yy, 320, yy), fill=(30, 37, 36))
+        for xx in range(0, 320, 40):
+            if random.random() < 0.5:
+                d.line((xx, yy, xx + random.randint(6, 18), yy + random.randint(2, 6)),
+                       fill=(48, 58, 52))
+    for _ in range(60):                             # 苔藓斑
+        xx, yy = random.randint(0, 312), random.randint(0, 250)
+        d.ellipse((xx, yy, xx + random.randint(3, 9), yy + random.randint(2, 6)),
+                  fill=(52, 92, 58))
+    for _ in range(30):                             # 岩石高光
+        xx, yy = random.randint(0, 310), random.randint(0, 250)
+        d.line((xx, yy, xx + random.randint(4, 10), yy), fill=(70, 80, 74))
+    S.save(os.path.join(OUT2, "bg_waterfall.png"))
+    print("  bg_waterfall.png      320x256")
+    # 瀑布关天空 (冷色调渐变 + 薄雾)
+    S2 = Image.new("RGBA", (320, 240))
+    d2 = ImageDraw.Draw(S2)
+    for yy in range(240):
+        t = yy / 240
+        col = (int(30 + t * 40), int(44 + t * 66), int(70 + t * 80))
+        d2.line((0, yy, 320, yy), fill=col)
+    d2.ellipse((240, 24, 284, 68), fill=(210, 226, 235))
+    d2.ellipse((250, 34, 276, 60), fill=(228, 240, 246))
+    S2.save(os.path.join(OUT2, "bg_falls_sky.png"))
+    print("  bg_falls_sky.png      320x240")
+
+# ---------------- 雪地关贴图/背景 ----------------
+def gen_snow():
+    import random
+    random.seed(31)
+    OUT2 = os.path.join(ROOT, "assets", "sprites")
+    SNOW = (232, 240, 248); SNOW2 = (196, 210, 226)
+    ROCK = (88, 96, 118); ROCK2 = (66, 74, 94)
+    # 雪地顶 (16x16): 白雪覆盖 + 蓝阴影
+    S = Image.new("RGBA", (16, 16))
+    c = Cell(S, 0, 0, 16, 16)
+    c.rect(0, 0, 16, 16, ROCK)
+    c.rect(0, 0, 16, 5, SNOW)
+    c.rect(0, 5, 16, 1, SNOW2)
+    for i in range(16):
+        if random.random() < 0.4: c.px(i, 0, SNOW2)
+        if random.random() < 0.3: c.px(i, random.randint(6, 14), ROCK2)
+    S.save(os.path.join(OUT2, "tile_snow.png")); print("  tile_snow.png          16x16")
+    # 冻土
+    S = Image.new("RGBA", (16, 16))
+    c = Cell(S, 0, 0, 16, 16)
+    c.rect(0, 0, 16, 16, ROCK)
+    for _ in range(9): c.px(random.randint(0, 15), random.randint(0, 15), ROCK2)
+    S.save(os.path.join(OUT2, "tile_rock.png")); print("  tile_rock.png          16x16")
+    # 冰水 (深蓝)
+    for name, hi in (("tile_icewater1.png", 0), ("tile_icewater2.png", 1)):
+        S = Image.new("RGBA", (16, 16))
+        c = Cell(S, 0, 0, 16, 16)
+        c.rect(0, 0, 16, 16, (30, 52, 110))
+        for x in range(16):
+            y = 2 + (2 if (x // 4 + hi) % 2 else 0)
+            c.px(x, y, (70, 110, 180)); c.px(x, y + 1, (120, 160, 220)) if (x + hi * 2) % 5 == 0 else None
+        S.save(os.path.join(OUT2, name))
+    print("  tile_icewater1/2.png   16x16")
+    # 雪原夜空 (极光带 + 星)
+    S = Image.new("RGBA", (320, 240))
+    d = ImageDraw.Draw(S)
+    for yy in range(240):
+        t = yy / 240
+        d.line((0, yy, 320, yy), fill=(int(10 + t * 16), int(14 + t * 30), int(38 + t * 46)))
+    for i in range(60):                        # 星
+        xx, yy = random.randint(0, 318), random.randint(0, 150)
+        b = random.randint(150, 255)
+        d.point((xx, yy), fill=(b, b, min(255, b + 30)))
+    for xx in range(320):                      # 极光带
+        yy = int(52 + 16 * math.sin(xx * 0.02) + 8 * math.sin(xx * 0.05 + 1.7))
+        for k in range(26):
+            a = max(0, 90 - k * 4)
+            d.point((xx, yy + k), fill=(60, 220, 150, a))
+    d.ellipse((250, 170, 290, 210), fill=(220, 228, 240))   # 月亮
+    d.ellipse((262, 176, 284, 202), fill=(10, 14, 38))
+    S.save(os.path.join(OUT2, "bg_snow_sky.png")); print("  bg_snow_sky.png        320x240")
+    # 雪山远景 (可横向平铺)
+    S = Image.new("RGBA", (320, 120))
+    d = ImageDraw.Draw(S)
+    for x in range(320):
+        y = int(58 + 24 * math.sin(x * math.pi / 160 * 2) + 12 * math.sin(x * math.pi / 80 * 2 + 2.2))
+        d.line((x, y, x, 120), fill=(52, 62, 92))
+        d.line((x, y, x, min(y + 8, 120)), fill=(190, 205, 230))
+    S.save(os.path.join(OUT2, "bg_snow_far.png")); print("  bg_snow_far.png        320x120")
+
 # ---------------- 标题 Logo ----------------
 def gen_title():
     W, H = 300, 110
@@ -533,5 +629,5 @@ if __name__ == "__main__":
     gen_player(P1_PAL, "player.png"); gen_player(P2_PAL, "player2.png")
     gen_enemies(); gen_turret(); gen_items()
     gen_bullets(); gen_fx(); gen_boss(); gen_tiles(); gen_bg()
-    gen_title(); gen_misc(); gen_preview()
+    gen_title(); gen_misc(); gen_waterfall(); gen_snow(); gen_preview()
     print("完成")

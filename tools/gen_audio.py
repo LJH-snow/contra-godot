@@ -103,6 +103,10 @@ def sfx():
               + [0.0] * int(0.2 * SR))
     write_wav("sfx_start.wav", seq([(60, 0.08), (67, 0.08), (72, 0.16)], vol=0.4))
     write_wav("sfx_konami.wav", seq([(76, 0.09), (81, 0.09), (88, 0.22)], vol=0.4))
+    # 连击里程碑: 快速上行双音+闪亮尾音
+    write_wav("sfx_combo.wav", mix(
+        seq([(88, 0.05), (93, 0.05), (100, 0.16)], vol=0.32, wavef=square, duty=0.3),
+        tone(1760, 0.2, 0.12, tri, decay=0.18)))
     write_wav("sfx_eagle.wav", mix(seq([(81, 0.06), (84, 0.06), (88, 0.06), (93, 0.3)], vol=0.35),
                                    noise_burst(0.4, 0.2, 0.1)))
 
@@ -229,7 +233,119 @@ def music_title():
             place(out, noise_burst(0.02, 0.035, 0.8), (bar * 4 + beat) * bp + bp / 2)
     write_wav("music_title.wav", out)
 
+def music_boss():
+    """Boss战: 紧张急促 8小节 156bpm 循环 (A小调 减和弦压迫感)"""
+    bpm = 156; bp = 60.0 / bpm; ep = bp / 2
+    total = 8 * 4 * bp
+    out = [0.0] * int(total * SR)
+
+    # 贝斯: 半音下行的压迫感 A2 Ab2 G2 Gb2
+    roots = [45, 44, 43, 42, 45, 44, 43, 42]
+    for bar, r in enumerate(roots):
+        for e in range(8):                      # 十六分推进
+            n = r if e % 4 != 3 else r + 1      # 每第4个半音点缀
+            s = tone(midi(n), ep * 0.45, 0.3, saw, a=0.002, decay=ep * 0.4)
+            place(out, s, (bar * 4) * bp + e * ep / 1.0)
+            s2 = tone(midi(n), ep * 0.42, 0.14, square, 0.25, a=0.002, decay=ep * 0.38)
+            place(out, s2, (bar * 4) * bp + (e + 0.5) * ep)
+
+    # 主旋律: 警报式交替高音
+    mel = [
+        [(81,2),(80,1),(81,1),(84,2),(81,1),(80,1)],
+        [(81,2),(80,1),(81,1),(76,2),(77,1),(76,1)],
+        [(81,2),(80,1),(81,1),(84,2),(87,1),(84,1)],
+        [(86,2),(84,1),(81,1),(80,4)],
+        [(81,2),(80,1),(81,1),(84,2),(81,1),(80,1)],
+        [(81,2),(80,1),(81,1),(76,2),(77,1),(76,1)],
+        [(88,1),(87,1),(84,1),(81,1),(84,2),(80,2)],
+        [(81,2),(80,1),(77,1),(76,4)],
+    ]
+    t = 0.0
+    for bar in range(8):
+        for (n, d) in mel[bar]:
+            if n:
+                s = tone(midi(n), ep * d * 0.95, 0.26, square, 0.3, a=0.003, decay=ep * d * 0.8)
+                place(out, s, t)
+            t += ep * d
+
+    # 密集鼓: 双踩感
+    for bar in range(8):
+        for beat in range(4):
+            tt = (bar * 4 + beat) * bp
+            place(out, tone(52, 0.1, 0.45, tri, glide=-18, decay=0.09), tt)
+            place(out, noise_burst(0.07, 0.24, 0.3), tt + bp / 2)
+            for q in range(4):                  # 十六分军鼓滚奏(每小节末)
+                if beat == 3:
+                    place(out, noise_burst(0.03, 0.12, 0.5), tt + q * bp / 4)
+
+    write_wav("music_boss.wav", out)
+
+def music_gameover():
+    """Game Over: 低沉哀伤 4小节 70bpm (A小调 下行)"""
+    bpm = 70; bp = 60.0 / bpm; ep = bp / 2
+    total = 4 * 4 * bp
+    out = [0.0] * int(total * SR)
+    # 低音长音下行 A2 G2 F2 E2
+    roots = [45, 43, 41, 40]
+    for bar, r in enumerate(roots):
+        place(out, tone(midi(r), bp * 3.6, 0.3, tri, a=0.02, decay=bp * 3.2), (bar * 4) * bp)
+        place(out, tone(midi(r - 12), bp * 3.6, 0.22, tri, a=0.02, decay=bp * 3.2), (bar * 4) * bp)
+    # 哀伤旋律
+    mel = [
+        [(69, 4), (76, 2), (72, 2)],
+        [(74, 3), (72, 1), (69, 4)],
+        [(72, 3), (71, 1), (69, 2), (68, 2)],
+        [(69, 8)],
+    ]
+    t = 0.0
+    for bar in range(4):
+        for (n, d) in mel[bar]:
+            s2 = tone(midi(n), ep * d * 0.95, 0.22, square, 0.4, a=0.01, decay=ep * d * 0.85)
+            place(out, s2, t)
+            t += ep * d
+    # 末尾噪音余烬
+    place(out, noise_burst(0.4, 0.1, 0.08), total - 0.5 * SR / SR if False else 4 * 4 * bp - 0.6)
+    write_wav("music_gameover.wav", out)
+
+def music_snow():
+    """雪原: 空灵冷冽 8小节 140bpm (D小调 摇曳琶音)"""
+    bpm = 140; bp = 60.0 / bpm; ep = bp / 2
+    total = 8 * 4 * bp
+    out = [0.0] * int(total * SR)
+    roots = [38, 38, 43, 43, 36, 36, 41, 45]     # D2 D2 G2 G2 C2 C2 F2 A2
+    for bar, r in enumerate(roots):
+        # 稀疏低音 (长音)
+        place(out, tone(midi(r), bp * 3.5, 0.28, tri, a=0.02, decay=bp * 3.0), (bar * 4) * bp)
+        # 摇曳琶音 (Dm/Bb 悬浮感)
+        arp = [r + 24, r + 31, r + 36, r + 31]
+        for e in range(8):
+            n = arp[e % 4] + (12 if e >= 4 else 0)
+            s2 = tone(midi(n), ep * 0.85, 0.13, square, 0.5, a=0.006, decay=ep * 0.75)
+            place(out, s2, (bar * 4) * bp + e * ep + (ep * 0.5 if bar % 2 else 0))
+    # 铃铛旋律 (稀疏)
+    mel = [
+        [(86,4),(0,2),(81,2)], [(84,3),(0,1),(81,4)],
+        [(79,4),(0,2),(74,2)], [(76,3),(0,1),(79,4)],
+        [(77,4),(0,2),(81,2)], [(84,3),(0,1),(86,4)],
+        [(88,4),(0,2),(84,2)], [(81,8)],
+    ]
+    t = 0.0
+    for bar in range(8):
+        for (n, d) in mel[bar]:
+            if n:
+                s3 = tone(midi(n), ep * d * 0.9, 0.16, tri, a=0.004, decay=ep * d * 0.8)
+                place(out, s3, t)
+            t += ep * d
+    # 柔和鼓
+    for bar in range(8):
+        for beat in range(4):
+            tt = (bar * 4 + beat) * bp
+            if beat == 0:
+                place(out, tone(50, 0.1, 0.35, tri, glide=-15, decay=0.09), tt)
+            place(out, noise_burst(0.02, 0.03, 0.85), tt + bp / 2)
+    write_wav("music_snow.wav", out)
+
 if __name__ == "__main__":
     print("生成音频 →", OUT)
-    sfx(); music_stage(); music_title()
+    sfx(); music_stage(); music_title(); music_boss(); music_gameover(); music_snow()
     print("完成")

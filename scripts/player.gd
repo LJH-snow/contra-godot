@@ -154,8 +154,10 @@ func _physics_process(delta: float) -> void:
 	_animate(delta)
 	_poll_hurt()
 
-	# 落水/落坑死亡
-	if position.y > GameData.FALL_LINE:
+	# 落水/落坑死亡 (坠落线由关卡配置提供)
+	if g != null and position.y > g.L_FALL_LINE:
+		die(true)
+	elif g == null and position.y > GameData.FALL_LINE:
 		die(true)
 
 func _poll_hurt() -> void:
@@ -342,11 +344,8 @@ func _animate(_delta: float) -> void:
 		_sprite.frame = 1
 	elif absf(velocity.x) > 5.0:
 		_anim_t += _delta
-		var row := 0 if (up == false and not Input.is_action_pressed("move_down")) else 1
 		# 跑动横射 行1 / 跑动斜上 行2 (仅按住上时)
-		row = 1
-		if up:
-			row = 2
+		var row := 2 if up else 1
 		_sprite.frame = row * 6 + int(_anim_t * 11.0) % 6
 	else:
 		_sprite.frame = 0

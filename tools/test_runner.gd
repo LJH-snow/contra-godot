@@ -50,6 +50,12 @@ func _physics_process(_d: float) -> void:
 				check(game.players.size() == 2, "双人模式: P2已生成(共%d人)" % game.players.size())
 				check(game.world_node.get_child_count() > 100, "地形已构建(%d块)" % game.world_node.get_child_count())
 				check(get_tree().get_nodes_in_group("enemies").size() >= 8, "静态敌人已布置")
+				# 最高分存档: 破纪录生效, 低分无效, 测后恢复
+				var prev_high: int = Boot.high_score
+				var broke: bool = Boot.submit_score(prev_high + 12345)
+				check(broke and Boot.high_score == prev_high + 12345, "最高分破纪录写入")
+				check(not Boot.submit_score(prev_high) and Boot.high_score == prev_high + 12345, "低分不覆盖最高分")
+				Boot.submit_score(prev_high)
 				_next(1, 10)
 		1:
 			# 持续射击, 中途放靶子跑兵
@@ -99,13 +105,13 @@ func _physics_process(_d: float) -> void:
 				game.player.position = Vector2(100, GameData.GROUND_Y)
 				game.player.velocity = Vector2.ZERO
 			if _due():
-				Input.action_press("jump")
+				Input.action_press("p1_jump")
 				_jump_min_y = 99999.0
 				_next(8, 70)
 		8:
 			_jump_min_y = minf(_jump_min_y, game.player.position.y)
 			if _due():
-				Input.action_release("jump")
+				Input.action_release("p1_jump")
 				check(_jump_min_y < 122.0, "跳跃高度够到第二层浮台(顶点y=%.0f, 需<122)" % _jump_min_y)
 				if game.bridge != null and game.bridge.segs.size() > 0:
 					game.player.position = Vector2(game.bridge.position.x + 8, game.bridge.position.y - 6)

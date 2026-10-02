@@ -24,13 +24,17 @@ def load_font(size):
 MESSAGES = {
     # key: (文本, 字号, 颜色)
     "mission1":  ("MISSION 1  丛林", 18, (255, 224, 120)),
+    "mission2":  ("MISSION 2  瀑布", 18, (255, 224, 120)),
+    "mission3":  ("MISSION 3  雪原", 18, (200, 230, 255)),
+    "enrage":    ("核心暴走!", 18, (255, 90, 70)),
     "warning":   ("警  告 !", 20, (255, 90, 70)),
     "core_open": ("核心暴露!", 18, (255, 200, 90)),
     "clear":     ("任务完成!", 20, (140, 255, 150)),
     "gameover":  ("GAME OVER", 20, (255, 90, 70)),
     "eagle":     ("金鹰闪击!", 18, (255, 224, 120)),
-    "title_hint":("左手 WASD 移动   右手 J射击 K跳   S卧倒  M静音", 11, (200, 214, 255)),
-    "title_cheat":("秘技发动!  初始生命 30", 13, (255, 224, 120)),
+    "title_hint":("P1 WASD移动  J射击 K跳跃   S卧倒  M静音", 9, (200, 214, 255)),
+    "title_hint_2p":("P1 WASD移动  J射击 K跳跃\nP2 方向键移动  X射击 Z跳跃", 9, (200, 214, 255)),
+    "title_cheat":("秘技发动!  初始生命 30", 12, (255, 224, 120)),
     "title_start":("PRESS ENTER", 20, (255, 255, 255)),
 }
 
@@ -40,16 +44,18 @@ def render(key, text, size, color):
     # 先量尺寸
     tmp = Image.new("RGBA", (10, 10))
     d = ImageDraw.Draw(tmp)
-    box = d.textbbox((0, 0), text, font=font)
-    w, h = box[2] - box[0] + pad * 2, box[3] - box[1] + pad * 2
+    box = d.multiline_textbbox((0, 0), text, font=font, spacing=1, align="center")
+    w = int(box[2] - box[0] + pad * 2)
+    h = int(box[3] - box[1] + pad * 2)
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
     ox, oy = pad - box[0], pad - box[1]
     for gx in (-2, -1, 0, 1, 2):          # 8向描边
         for gy in (-2, -1, 0, 1, 2):
             if gx or gy:
-                d.text((ox + gx, oy + gy), text, font=font, fill=(24, 16, 20, 255))
-    d.text((ox, oy), text, font=font, fill=color + (255,))
+                d.multiline_text((ox + gx, oy + gy), text, font=font, spacing=1,
+                                 align="center", fill=(24, 16, 20, 255))
+    d.multiline_text((ox, oy), text, font=font, spacing=1, align="center", fill=color + (255,))
     img.save(os.path.join(OUT, key + ".png"))
     print(f"  {key:14s} {w}x{h}")
 

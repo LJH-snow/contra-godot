@@ -51,14 +51,22 @@ func _physics_process(delta: float) -> void:
 				_stop_t = 0.32
 			else:
 				_fire_t = 0.9
-	# 出屏 / 落水
-	if position.y > 270.0:
+	# 出屏 / 落水 (纵向关: 坠出视野下缘即消失)
+	if g != null and g.L_VERTICAL:
+		if position.y > g.cam_y + 320.0 or position.y < g.cam_y - 120.0:
+			queue_free()
+			return
+	elif position.y > 270.0:
 		if g != null and not g.has_floor(position.x, position.y):
-			Fx.make(get_parent(), Vector2(position.x, GameData.GROUND_Y + 6.0), "splash")
+			Fx.make(get_parent(), Vector2(position.x, L_GROUND_Y_FALL()), "splash")
 		queue_free()
 		return
 	if g != null and (position.x < g.cam_x - 100.0 or position.x > g.cam_x + 440.0):
 		queue_free()
+
+func L_GROUND_Y_FALL() -> float:
+	var g := get_tree().get_first_node_in_group("game")
+	return g.L_GROUND_Y + 6.0 if g != null else 206.0
 
 func _shoot() -> void:
 	_fire_t = 1.4 + randf() * 2.0

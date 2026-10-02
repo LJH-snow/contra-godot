@@ -74,8 +74,14 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 		return
 	var g := get_tree().get_first_node_in_group("game")
-	if g != null and (position.x < g.cam_x - 60.0 or position.x > g.cam_x + 420.0
-			or position.y < -60.0 or position.y > 300.0):
+	if g == null:
+		return
+	if g.L_VERTICAL:
+		if position.y < g.cam_y - 80.0 or position.y > g.cam_y + 320.0 \
+				or position.x < -40.0 or position.x > g.L_W + 40.0:
+			queue_free()
+	elif position.x < g.cam_x - 60.0 or position.x > g.cam_x + 420.0 \
+			or position.y < -60.0 or position.y > 300.0:
 		queue_free()
 
 func _on_body(b: Node) -> void:

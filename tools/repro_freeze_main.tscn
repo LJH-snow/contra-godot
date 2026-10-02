@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://contra_repro"]
+
+[ext_resource type="Script" path="res://tools/repro_freeze.gd" id="1_repro"]
+
+[node name="ReproFreeze" type="Node"]
+script = ExtResource("1_repro")

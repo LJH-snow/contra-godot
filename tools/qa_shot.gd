@@ -27,6 +27,8 @@ func _physics_process(_d: float) -> void:
 	var p = game.player
 	match step:
 		0:
+			p.shield_t = 999.0                  # 巡演免死
+			p._ring.scale = Vector2(0.01, 0.01)  # 护盾圈缩没, 不遮挡截图
 			_shot("10_spawn_idle")
 			_next(1, 30)
 		1:
@@ -61,23 +63,28 @@ func _physics_process(_d: float) -> void:
 			_next(8, 150)                                   # 等生成+逼近
 		8:
 			_shot("15_gatling")
+			p.position = Vector2(2450, GameData.GROUND_Y)   # 长平地段: 坦克驶入
+			p.velocity = Vector2.ZERO
+			_next(9, 250)
+		9:
+			_shot("16_tank")
 			p.position = Vector2(3340, GameData.GROUND_Y)   # Boss 堡垒前
 			p.velocity = Vector2.ZERO
-			_next(9, 50)                                    # 等 Boss 触发
-		9:
-			game.boss_wall.close_gate()                     # 关闸: 闸门遮核心
-			_next(10, 8)
+			_next(10, 50)                                   # 等 Boss 触发
 		10:
-			_shot("16_boss_closed")
-			game.boss_wall.open_gate()                      # 开闸: 露出发光核心
-			p._try_shoot(game)
+			game.boss_wall.close_gate()                     # 关闸: 闸门遮核心
 			_next(11, 8)
 		11:
-			_shot("17_boss_open")
+			_shot("17_boss_closed")
+			game.boss_wall.open_gate()                      # 开闸: 露出发光核心
+			p._try_shoot(game)
+			_next(12, 8)
+		12:
+			_shot("18_boss_open")
 			Fx.make(game.world_node, p.position + Vector2(60, -34), "boom_big")
 			Fx.make(game.world_node, p.position + Vector2(130, -8), "boom")
-			_next(12, 9)
-		12:
-			_shot("18_explosion")
+			_next(13, 9)
+		13:
+			_shot("19_explosion")
 			print("QA 截图完成")
 			get_tree().quit(0)

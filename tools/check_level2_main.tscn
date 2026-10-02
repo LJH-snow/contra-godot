@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://contra_lvl2"]
+
+[ext_resource type="Script" path="res://tools/check_level2.gd" id="1_lvl2"]
+
+[node name="CheckLevel2" type="Node"]
+script = ExtResource("1_lvl2")
