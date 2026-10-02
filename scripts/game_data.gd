@@ -91,6 +91,46 @@ static func diff_lives() -> int:
 	return [5, 3, 2][clampi(diff_index(), 0, 2)]
 
 # ---------------- 关卡配置 ----------------
+## 异形巢穴: 洞穴横向, 卵巢孵化小兵, 终点心脏 Boss
+static func _level_lair() -> Dictionary:
+	var pods: Array[Vector2i] = [
+		Vector2i(560, 184), Vector2i(900, 184), Vector2i(1240, 116),
+		Vector2i(1700, 184), Vector2i(2050, 116), Vector2i(2450, 184),
+		Vector2i(2800, 116), Vector2i(3100, 184),
+	]
+	var snip: Array[Vector2i] = [
+		Vector2i(760, 200), Vector2i(1450, 200), Vector2i(1980, 200),
+		Vector2i(2620, 200), Vector2i(3050, 200),
+	]
+	var turb: Array[Vector2i] = [
+		Vector2i(1100, 200), Vector2i(2200, 200), Vector2i(3200, 200),
+	]
+	return {
+		"name": "FINAL  巢穴",
+		"key": "mission4",
+		"vertical": false,
+		"w": 3488, "h": 240,
+		"grounds": [
+			Vector2i(0, 700), Vector2i(820, 1330), Vector2i(1560, 2280),
+			Vector2i(2400, 3488),
+		],
+		"bridge": Vector2i(-1, -1),
+		"platforms": [
+			Vector3i(340, 144, 64), Vector3i(470, 116, 48),
+			Vector3i(1160, 144, 64), Vector3i(1290, 116, 48),
+			Vector3i(1950, 144, 64), Vector3i(2080, 116, 48),
+			Vector3i(2600, 144, 64),
+		],
+		"snipers": snip,
+		"turrets": turb,
+		"pods": pods,
+		"boss_pos": Vector2(3392, 24),
+		"boss_trigger": 3088.0,
+		"boss_hp": 60,
+		"boss_tint": Color(1.0, 0.45, 0.6),
+		"ground_y": 200, "fall_line": 252.0,
+		"bg": "cave",
+	}
 ## 雪原: 更密的浮台与缺口, 夜色 + 飘雪
 static func _level_snow() -> Dictionary:
 	var plats: Array[Vector3i] = [
@@ -131,6 +171,8 @@ static func _level_snow() -> Dictionary:
 	}
 ## level 1: 丛林(横向) / level 2: 瀑布(纵向) / level 3: 雪原(横向, 夜战)
 static func level_config(n: int) -> Dictionary:
+	if n >= 4:
+		return _level_lair()
 	if n >= 3:
 		return _level_snow()
 	if n <= 1:

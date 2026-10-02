@@ -550,6 +550,61 @@ def gen_snow():
         d.line((x, y, x, min(y + 8, 120)), fill=(190, 205, 230))
     S.save(os.path.join(OUT2, "bg_snow_far.png")); print("  bg_snow_far.png        320x120")
 
+# ---------------- 异形巢穴关素材 ----------------
+def gen_lair():
+    import random
+    random.seed(41)
+    OUT2 = os.path.join(ROOT, "assets", "sprites")
+    # 洞穴地面 (紫红有机岩)
+    S = Image.new("RGBA", (16, 16))
+    c = Cell(S, 0, 0, 16, 16)
+    c.rect(0, 0, 16, 16, (86, 52, 78))
+    c.rect(0, 0, 16, 4, (196, 96, 120))
+    c.rect(0, 4, 16, 1, (140, 66, 92))
+    for _ in range(8):
+        c.px(random.randint(0, 15), random.randint(6, 15), (60, 34, 52))
+    for _ in range(5):
+        c.px(random.randint(0, 15), random.randint(0, 3), (230, 150, 160))
+    S.save(os.path.join(OUT2, "tile_cave.png")); print("  tile_cave.png          16x16")
+    # 异形卵 (2 帧: 脉动)
+    for f in range(2):
+        S = Image.new("RGBA", (24, 28))
+        c = Cell(S, 0, 0, 24, 28)
+        r = 9 + f
+        c.ellipse if False else None
+        # 卵体
+        c.disc(12, 15, r, (150, 60, 110))
+        c.disc(12, 15, r - 3, (190, 90, 140))
+        c.disc(10, 12, 2, (240, 180, 210))
+        # 顶部裂口
+        c.rect(12 - r + 2, 15 - r - 1, (r - 2) * 2, 2, (90, 30, 70))
+        c.disc(12, 6 + f, 2, (255, 120, 160))   # 顶端发光
+        c.outline()
+        S.save(os.path.join(OUT2, "alien_pod_%d.png" % f))
+    print("  alien_pod_0/1.png      24x28")
+    # 洞穴背景 (可横向平铺): 深紫有机洞壁 + 垂根 + 红斑
+    S = Image.new("RGBA", (320, 120))
+    d = ImageDraw.Draw(S)
+    for x in range(320):
+        y = int(46 + 22 * math.sin(x * math.pi / 140 * 2) + 12 * math.sin(x * math.pi / 70 * 2 + 0.9))
+        d.line((x, y, x, 120), fill=(48, 24, 52))
+        d.line((x, y, x, y + 6), fill=(66, 34, 70))
+    for _ in range(40):                          # 红色孢子斑
+        xx, yy = random.randint(0, 314), random.randint(60, 116)
+        rr = random.randint(2, 5)
+        d.ellipse((xx, yy, xx + rr, yy + rr), fill=(150, 50, 90))
+    for xx in range(10, 320, 34):                # 垂根
+        yy = int(40 + 20 * math.sin(xx * 0.1))
+        d.line((xx, yy, xx, yy + random.randint(20, 44)), fill=(90, 44, 80), width=2)
+    S.save(os.path.join(OUT2, "bg_cave.png")); print("  bg_cave.png            320x120")
+    # 巢穴天空 (暗红渐变)
+    S = Image.new("RGBA", (320, 240))
+    d = ImageDraw.Draw(S)
+    for yy in range(240):
+        t = yy / 240
+        d.line((0, yy, 320, yy), fill=(int(40 - t * 18), int(16 + t * 8), int(34 - t * 8)))
+    S.save(os.path.join(OUT2, "bg_cave_sky.png")); print("  bg_cave_sky.png        320x240")
+
 # ---------------- 标题 Logo ----------------
 def gen_title():
     W, H = 300, 110
@@ -629,5 +684,5 @@ if __name__ == "__main__":
     gen_player(P1_PAL, "player.png"); gen_player(P2_PAL, "player2.png")
     gen_enemies(); gen_turret(); gen_items()
     gen_bullets(); gen_fx(); gen_boss(); gen_tiles(); gen_bg()
-    gen_title(); gen_misc(); gen_waterfall(); gen_snow(); gen_preview()
+    gen_title(); gen_misc(); gen_waterfall(); gen_snow(); gen_lair(); gen_preview()
     print("完成")

@@ -12,6 +12,7 @@ var score := 0
 var high_score := 0
 var lifetime_kills := 0
 var missions_played := 0
+var leaderboard: Array = []          # TOP5: [{score, stage, loop, diff}]
 var music_vol := 0.8
 var sfx_vol := 0.8
 var muted := false
@@ -63,16 +64,31 @@ func _load_high() -> void:
 		missions_played = int(cf.get_value("stats", "missions_played", 0))
 		music_vol = float(cf.get_value("audio", "music", 0.8))
 		sfx_vol = float(cf.get_value("audio", "sfx", 0.8))
+		var raw: Array = cf.get_value("rank", "top5", [])
+		for e in raw:
+			if e is Dictionary and int(e.get("score", 0)) > 0:
+				leaderboard.append(e)
+		leaderboard.sort_custom(func(a, b): return int(a.get("score", 0)) > int(b.get("score", 0)))
+		if leaderboard.size() > 5:
+			leaderboard = leaderboard.slice(0, 5)
 
-## 提交分数, 破纪录返回 true 并落盘 (顺带持久化生涯统计)
+## 提交分数: 破纪录判定 + TOP5 排行榜插入 + 生涯统计落盘
 func submit_score(s: int) -> bool:
 	var broke := s > high_score
 	if broke:
 		high_score = s
+	if s > 0:
+		leaderboard.append({
+			"score": s, "stage": level, "loop": loop_count, "diff": difficulty,
+		})
+		leaderboard.sort_custom(func(a, b): return int(a.get("score", 0)) > int(b.get("score", 0)))
+		if leaderboard.size() > 5:
+			leaderboard = leaderboard.slice(0, 5)
 	var cf := ConfigFile.new()
 	cf.set_value("score", "high", high_score)
 	cf.set_value("stats", "lifetime_kills", lifetime_kills)
 	cf.set_value("stats", "missions_played", missions_played)
+	cf.set_value("rank", "top5", leaderboard)
 	cf.save(SAVE_PATH)
 	return broke
 

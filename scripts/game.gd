@@ -12,6 +12,7 @@ const TEX_TILES := {
 	"rock": preload("res://assets/sprites/tile_rock.png"),
 	"icewater1": preload("res://assets/sprites/tile_icewater1.png"),
 	"icewater2": preload("res://assets/sprites/tile_icewater2.png"),
+	"cave": preload("res://assets/sprites/tile_cave.png"),
 }
 const PLAYER_SCENE := preload("res://scripts/player.gd")
 const BRIDGE_SCENE := preload("res://scripts/bridge.gd")
@@ -178,10 +179,15 @@ func _build_terrain() -> void:
 		_build_terrain_vertical()
 		return
 	# 实心地段: 顶层草/雪 + 泥土/冻土到屏底; 缺口处画水面/冰水
-	var top_key := "snow" if cfg["bg"] == "snow" else "grass"
-	var fill_key := "rock" if cfg["bg"] == "snow" else "dirt"
-	var w1 := "icewater1" if cfg["bg"] == "snow" else "water1"
-	var w2 := "icewater2" if cfg["bg"] == "snow" else "water2"
+	var theme: String = cfg["bg"]
+	var top_key := "grass"
+	var fill_key := "dirt"
+	var w1 := "water1"
+	var w2 := "water2"
+	if theme == "snow":
+		top_key = "snow"; fill_key = "rock"; w1 = "icewater1"; w2 = "icewater2"
+	elif theme == "cave":
+		top_key = "cave"; fill_key = "cave"; w1 = "water1"; w2 = "water2"
 	for seg in L_GROUNDS:
 		for x in range(seg.x, seg.y, TILE):
 			_tile(TEX_TILES[top_key], x, L_GROUND_Y)
@@ -261,6 +267,11 @@ func _build_background() -> void:
 		bg_root.get_node("NearLayer").visible = false
 		_build_snow_particles()
 		return
+	if cfg["bg"] == "cave":
+		bg_root.get_node("Sky/SkySprite").texture = preload("res://assets/sprites/bg_cave_sky.png")
+		bg_root.get_node("FarLayer/FarSprite").texture = preload("res://assets/sprites/bg_cave.png")
+		bg_root.get_node("NearLayer").visible = false
+		return
 	if not L_VERTICAL:
 		return
 	# 隐藏丛林层, 换瀑布崖壁 (纹理纵向重复)
@@ -320,6 +331,13 @@ func _build_statics() -> void:
 		sn.position = Vector2(s.x, s.y)
 		enemies_node.add_child(sn)
 		_hook_score(sn)
+	# 异形卵 (巢穴关)
+	if cfg.has("pods"):
+		for pv in cfg["pods"]:
+			var pod: AlienPod = preload("res://scripts/alien_pod.gd").new()
+			pod.position = Vector2(pv.x, pv.y)
+			enemies_node.add_child(pod)
+			_hook_score(pod)
 	# 炮塔
 	for t in cfg["turrets"]:
 		var tu := EnemyTurret.new()
@@ -329,25 +347,30 @@ func _build_statics() -> void:
 	# Boss
 	if L_VERTICAL:
 		# 瀑布顶要塞: 裸核心 (闸门由核心开合表现)
-		boss_core = BossCore.new()
-		boss_core.position = cfg["boss_pos"] + Vector2(48, 56)
-		boss_core.boss_destroyed.connect(_on_boss_core_destroyed)
-		enemies_node.add_child(boss_core)
-		_hook_score(boss_core)
-		boss_core.set_open(false)
+		_make_core(cfg["boss_pos"] + Vector2(48, 56), 30)
 	else:
 		boss_wall = StaticBody2D.new()
 		boss_wall.set_script(preload("res://scripts/boss_wall.gd"))
 		boss_wall.position = cfg["boss_pos"]
 		world_node.add_child(boss_wall)
 		boss_wall.build_shapes()
-		boss_core = BossCore.new()
-		boss_core.position = Vector2(cfg.boss_pos.x + 48 - 14, L_GROUND_Y - 42)
-		boss_core.boss_destroyed.connect(_on_boss_core_destroyed)
-		enemies_node.add_child(boss_core)
-		_hook_score(boss_core)
+		_make_core(Vector2(cfg["boss_pos"].x + 48 - 14, L_GROUND_Y - 42),
+			int(cfg.get("boss_hp", 30)))
+		if cfg.has("boss_tint"):
+			boss_core.modulate = cfg["boss_tint"]   # 心脏配色
 		boss_wall.attach_core(boss_core)
-		boss_core.set_open(false)
+
+func _make_core(pos: Vector2, hp: int) -> BossCore:
+	boss_core = BossCore.new()
+	boss_core.position = pos
+	boss_core.boss_destroyed.connect(_on_boss_core_destroyed)
+	enemies_node.add_child(boss_core)
+	# 入树后再设血量 (BossCore._ready 会按周目重置)
+	boss_core.max_hp = hp
+	boss_core.hp = hp
+	_hook_score(boss_core)
+	boss_core.set_open(false)
+	return boss_core
 
 func _on_boss_core_destroyed() -> void:
 	var pos := boss_wall.position + Vector2(48, 24) if boss_wall != null else boss_core.position
@@ -538,13 +561,14 @@ func _mission_complete() -> void:
 	Boot.stop_music()
 	Boot.play_sfx("sfx_clear")
 	hud.call("flash_message", "clear", 3.0)
-	# 关卡推进: 1→2→3→循环回1并提升周目
+	# 关卡推进: 1→2→3→4→结局→循环回1并提升周目
 	var t := get_tree().create_timer(3.2)
 	t.timeout.connect(func():
+		if Boot.level >= 4:
+			Boot.start_lives = 3
+			get_tree().change_scene_to_file("res://scenes/ending.tscn")
+			return
 		Boot.level += 1
-		if Boot.level > 3:
-			Boot.level = 1
-			Boot.loop_count += 1
 		get_tree().reload_current_scene())
 
 func _game_over() -> void:

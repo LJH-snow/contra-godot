@@ -11,13 +11,13 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	if Boot.has_meta("snow_advanced"):
 		var adv: Array = Boot.get_meta("snow_advanced")
-		print("PASS: 关卡推进回丛林(Boot.level=%d)" % adv[0])
-		print("PASS: 周目+1(loop=%d)" % adv[1])
+		print("PASS: 关卡推进到巢穴(Boot.level=%d)" % adv[0])
+		print("PASS: 周目不变(loop=%d)" % adv[1])
 		print("=== 雪原关验收结束(含跨重启断言) ===")
 		Boot.remove_meta("snow_advanced")
 		Boot.level = 1
 		Boot.loop_count = 1
-		get_tree().quit(0 if adv[0] == 1 and adv[1] == 2 else 1)
+		get_tree().quit(0 if adv[0] == 4 and adv[1] == 1 else 1)
 		return
 	print("=== 雪原关验收开始 ===")
 	Boot.level = 3

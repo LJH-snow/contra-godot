@@ -14,13 +14,13 @@ func _ready() -> void:
 	# 关卡推进通过 reload 重启本场景 — 第二次启动时验证推进结果
 	if Boot.has_meta("lvl2_advanced"):
 		var adv: Array = Boot.get_meta("lvl2_advanced")
-		print("PASS: 关卡推进回丛林(Boot.level=%d)" % adv[0])
-		print("PASS: 周目+1(loop=%d)" % adv[1])
+		print("PASS: 关卡推进到雪原(Boot.level=%d)" % adv[0])
+		print("PASS: 周目不变(loop=%d)" % adv[1])
 		print("=== 瀑布关验收结束(含跨重启断言) ===")
 		Boot.remove_meta("lvl2_advanced")
 		Boot.level = 1
 		Boot.loop_count = 1
-		get_tree().quit(0 if adv[0] == 1 and adv[1] == 2 else 1)
+		get_tree().quit(0 if adv[0] == 3 and adv[1] == 1 else 1)
 		return
 	Boot.level = 2
 	Boot.difficulty = 1
