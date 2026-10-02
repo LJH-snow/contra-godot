@@ -60,7 +60,9 @@ func _physics_process(_d: float) -> void:
 				check(far.texture.resource_path.ends_with("bg_snow_far.png"), "雪山远景已换装")
 				var snow := game.get_node_or_null("SnowLayer/SnowParticles")
 				check(snow != null and snow.emitting, "飘雪粒子运行中")
-				check(game.get_node("NearLayer") == null or not game.get_node("NearLayer").visible, "丛林近景已隐藏")
+				var near := game.get_node_or_null("Background/NearLayer")
+				check(near == null or not near.visible, "丛林近景已隐藏")
+
 				_next(2, 30)
 		2:
 			if _due():

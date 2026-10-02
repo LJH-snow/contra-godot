@@ -94,8 +94,12 @@ func _ready() -> void:
 func _mkrect(tex: Texture2D, center: Vector2) -> TextureRect:
 	var t := TextureRect.new()
 	t.texture = tex
+	t.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	t.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
-	t.position = center - Vector2(tex.get_width() / 2.0, tex.get_height() / 2.0)
+	t.position = Vector2(
+		roundf(center.x - tex.get_width() / 2.0),
+		roundf(center.y - tex.get_height() / 2.0)
+	)
 	add_child(t)
 	return t
 

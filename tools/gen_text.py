@@ -21,6 +21,8 @@ def load_font(size):
             continue
     raise RuntimeError("无可用中文字体")
 
+HARD_EDGE_KEYS = {"title_hint", "title_hint_2p", "title_start"}
+
 MESSAGES = {
     # key: (文本, 字号, 颜色)
     "mission1":  ("MISSION 1  丛林", 18, (255, 224, 120)),
@@ -46,14 +48,18 @@ MESSAGES = {
 def render(key, text, size, color):
     font = load_font(size)
     pad = 8
+    # 标题底部提示和开始提示使用二值字形, 避免浏览器放大时叠加半透明边缘。
+    fontmode = "1" if key in HARD_EDGE_KEYS else "L"
     # 先量尺寸
     tmp = Image.new("RGBA", (10, 10))
     d = ImageDraw.Draw(tmp)
+    d.fontmode = fontmode
     box = d.multiline_textbbox((0, 0), text, font=font, spacing=1, align="center")
     w = int(box[2] - box[0] + pad * 2)
     h = int(box[3] - box[1] + pad * 2)
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
+    d.fontmode = fontmode
     ox, oy = pad - box[0], pad - box[1]
     for gx in (-2, -1, 0, 1, 2):          # 8向描边
         for gy in (-2, -1, 0, 1, 2):
@@ -61,6 +67,10 @@ def render(key, text, size, color):
                 d.multiline_text((ox + gx, oy + gy), text, font=font, spacing=1,
                                  align="center", fill=(24, 16, 20, 255))
     d.multiline_text((ox, oy), text, font=font, spacing=1, align="center", fill=color + (255,))
+    if key in HARD_EDGE_KEYS:
+        # 兼容不同 Pillow 版本: 最终再把 alpha 压成透明/不透明两档。
+        alpha = img.getchannel("A").point(lambda a: 255 if a >= 128 else 0)
+        img.putalpha(alpha)
     img.save(os.path.join(OUT, key + ".png"))
     print(f"  {key:14s} {w}x{h}")
 

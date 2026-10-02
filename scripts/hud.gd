@@ -79,6 +79,7 @@ func _ready() -> void:
 	_msg = TextureRect.new()
 	_msg.position = Vector2(0, 92)
 	_msg.size = Vector2(320, 44)
+	_msg.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_msg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	_msg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_msg.visible = false

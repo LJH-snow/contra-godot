@@ -56,6 +56,19 @@ func _physics_process(_d: float) -> void:
 				check(game.L_VERTICAL, "纵向关配置生效")
 				check(game.L_PLATFORMS.size() >= 18, "瀑布浮台已构建(%d个)" % game.L_PLATFORMS.size())
 				check(game.L_H == 1728.0, "关卡高度 1728")
+				var main_plats := []
+				for p in game.L_PLATFORMS:
+					if p.z == 76:
+						main_plats.append(p)
+				main_plats.sort_custom(func(a, b): return a.y > b.y)
+				check(main_plats.size() >= 18, "主浮台数量足够(%d个)" % main_plats.size())
+				var spacing_ok := true
+				for i in range(1, main_plats.size()):
+					if main_plats[i - 1].y - main_plats[i].y != 80:
+						spacing_ok = false
+				check(spacing_ok, "主浮台垂直间距 80px")
+				check(game.get_tree().get_nodes_in_group("air_missile").is_empty(), "瀑布关无空袭导弹")
+
 				check(game.player != null and game.player.position.y > 1500.0, "玩家出生在底部")
 				var bg := game.get_node("Background/FarLayer/FarSprite")
 				check(bg.texture.resource_path.ends_with("bg_waterfall.png"), "瀑布崖壁背景已换装")

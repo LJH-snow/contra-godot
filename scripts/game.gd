@@ -330,9 +330,12 @@ func _build_statics() -> void:
 	# 狙击手
 	for s in cfg["snipers"]:
 		var sn := EnemySniper.new()
+		if L_VERTICAL:
+			sn.fire_int = 2.6
 		sn.position = Vector2(s.x, s.y)
 		enemies_node.add_child(sn)
 		_hook_score(sn)
+
 	# 异形卵 (巢穴关)
 	if cfg.has("pods"):
 		for pv in cfg["pods"]:
@@ -343,9 +346,12 @@ func _build_statics() -> void:
 	# 炮塔
 	for t in cfg["turrets"]:
 		var tu := EnemyTurret.new()
+		if L_VERTICAL:
+			tu.fire_int = 3.0
 		tu.position = Vector2(t.x, t.y)
 		enemies_node.add_child(tu)
 		_hook_score(tu)
+
 	# 开花弹兵 (不可击毙, 只能躲)
 	for b in cfg.get("blossoms", []):
 		var bl := EnemyBlossom.new()
@@ -465,37 +471,42 @@ func _process(delta: float) -> void:
 		_intro_t -= delta
 		return
 
-	# 敌人波次 (难度影响刷新间隔)
+	# 敌人波次 (难度影响刷新间隔; 瀑布关单独放宽波次间隔)
 	_spawn_t -= delta
 	if _spawn_t <= 0.0 and not boss_active:
-		_spawn_t = maxf(1.5, 2.7 - Boot.loop_count * 0.15) * GameData.diff_spawn()
+		var vertical_spawn_scale := 1.4 if L_VERTICAL else 1.0
+		_spawn_t = maxf(1.5, 2.7 - Boot.loop_count * 0.15) \
+				* GameData.diff_spawn() * vertical_spawn_scale
 		_spawn_wave()
-	# 胶囊 (每 3 次出一组震天鹰编队: 打中间金鹰 = 清屏 + 1 命)
-	_capsule_t -= delta
-	if _capsule_t <= 0.0 and not boss_active:
-		_capsule_t = 11.0 + randf() * 5.0
-		_capsule_n += 1
-		if _capsule_n % 3 == 0:
-			var base_y := 60.0 + randf() * 30.0
-			for k in range(3):
-				var eg := EnemyEagle.new()
-				eg.setup_formation(Vector2(cam_x - 24.0 - k * 36.0, base_y), k == 0, base_y)
-				enemies_node.add_child(eg)
-				_hook_score(eg)
-		else:
-			var cap := EnemyCapsule.new()
-			enemies_node.add_child(cap)
-			_hook_score(cap)
 
-	# 瀑布滚石 (纵向关专属: 从视野上缘随机坠落)
+	# 胶囊 / 震天鹰只在横向关出现, 避免瀑布关叠加空中危险源
+	if not L_VERTICAL:
+		_capsule_t -= delta
+		if _capsule_t <= 0.0 and not boss_active:
+			_capsule_t = 11.0 + randf() * 5.0
+			_capsule_n += 1
+			if _capsule_n % 3 == 0:
+				var base_y := 60.0 + randf() * 30.0
+				for k in range(3):
+					var eg := EnemyEagle.new()
+					eg.setup_formation(Vector2(cam_x - 24.0 - k * 36.0, base_y), k == 0, base_y)
+					enemies_node.add_child(eg)
+					_hook_score(eg)
+			else:
+				var cap := EnemyCapsule.new()
+				enemies_node.add_child(cap)
+				_hook_score(cap)
+
+	# 瀑布滚石 (纵向关专属: 从视野上缘随机坠落, 放宽间隔)
 	if L_VERTICAL and not boss_active:
 		_rock_t -= delta
 		if _rock_t <= 0.0:
-			_rock_t = 1.7 + randf() * 1.4
+			_rock_t = 2.5 + randf() * 1.5
 			var rk := EnemyRock.new()
 			rk.position = Vector2(randf_range(24.0, L_W - 24.0), cam_y - 20.0)
 			enemies_node.add_child(rk)
 			_hook_score(rk)
+
 
 	# Boss 触发: 横向到达警戒线 / 纵向爬到要塞高度
 	if not boss_active and not alive.is_empty():
