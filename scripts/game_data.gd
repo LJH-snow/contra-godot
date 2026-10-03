@@ -225,18 +225,21 @@ static func level_config(n: int) -> Dictionary:
 	var plats: Array[Vector3i] = []
 	var snip: Array[Vector2i] = []
 	var turb: Array[Vector2i] = []
-	# 之字浮台: 每 80px 一层, 左右微错位且横向重叠 (y 从底部 1560 到顶部 120)
+	# 之字浮台: 每 64px 一层 (满跳 88px 的 73%, 普通玩家可稳定达成),
+	# 左右微错位且横向重叠 (y 从底部 1560 到顶部 120)
 	var y := 1560
 	var side := 0
+	var si := 0
 	while y > 140:
 		var x := 36 if side == 0 else 108
 		plats.append(Vector3i(x, y, 76))
 		if y % 240 < 120:                        # 部分层加侧翼小台
-			plats.append(Vector3i(140 if side == 0 else 20, y - 56, 48))
-		if y < 1500 and y % 360 < 120:
-			snip.append(Vector2i(x + 30, y - 16))  # 平台上的狙击手
-		y -= 80
+			plats.append(Vector3i(140 if side == 0 else 20, y - 40, 48))
+		if y < 1500 and si % 3 == 0:
+			snip.append(Vector2i(x + 30, y - 16))  # 每 3 层一个狙击手
+		y -= 64
 		side = 1 - side
+		si += 1
 	# 顶部要塞平台 + 双炮塔
 	plats.append(Vector3i(88, 120, 144))
 	turb.append(Vector2i(60, 120))

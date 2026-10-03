@@ -94,6 +94,7 @@ func _apply_level() -> void:
 	L_GROUND_Y = cfg["ground_y"]
 	L_FALL_LINE = cfg["fall_line"]
 	L_BOSS_TRIGGER = cfg["boss_trigger"]
+	boss_trigger_x = L_BOSS_TRIGGER          # 纵向关触发线是 y 值, 必须覆盖默认 3088
 	L_NAME = cfg["name"]
 	L_MSG_KEY = cfg["key"]
 	if L_VERTICAL:
@@ -596,6 +597,8 @@ func _hook_score(e: Enemy) -> void:
 func _start_boss() -> void:
 	boss_active = true
 	hud.call("flash_message", "warning", 1.6)
+	if L_VERTICAL:
+		hud.call("set_boss_bar_bottom")          # 纵向关 Boss 在顶部, 血条移到底部防遮挡
 	hud.call("show_boss_bar", true)
 	Boot.play_sfx("sfx_eagle")
 	# 周期开门射击
@@ -619,10 +622,14 @@ func _toggle_gate() -> void:
 	if _gate_open:
 		if boss_wall != null:
 			boss_wall.open_gate()
+		elif boss_core != null:
+			boss_core.set_open(true)             # 纵向关无墙体, 直接开合核心
 		hud.call("flash_message", "core_open", 1.0)
 	else:
 		if boss_wall != null:
 			boss_wall.close_gate()
+		elif boss_core != null:
+			boss_core.set_open(false)
 
 func boss_hp_changed(hp: int, maxhp: int) -> void:
 	hud.call("set_boss_hp", float(hp) / maxhp)
