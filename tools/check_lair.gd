@@ -66,7 +66,7 @@ func _physics_process(_d: float) -> void:
 				var hatched := get_tree().get_nodes_in_group("pod_spawned").size()
 				check(hatched > 0, "卵孵化出小兵(%d)" % hatched)
 				# 心脏 Boss: 血量与配色
-				check(game.boss_core.max_hp == 60, "心脏血量 60")
+				check(game.boss_core.max_hp == 45, "心脏血量 45")
 				check(game.boss_core.modulate == Color(1.0, 0.45, 0.6), "心脏配色")
 				# 触发 Boss
 				game.player.position = Vector2(3200, 170)
@@ -76,7 +76,7 @@ func _physics_process(_d: float) -> void:
 				check(game.boss_active, "巢穴 Boss 战触发")
 				if is_instance_valid(game.boss_core):
 					game.boss_core.set_open(true)
-					game.boss_core.damage(35, Vector2.RIGHT)   # 打入狂暴 (60血 → 25)
+					game.boss_core.damage(35, Vector2.RIGHT)   # 打入狂暴 (45血 → 10)
 				_next(4, 10)
 		4:
 			if _due():

@@ -88,7 +88,7 @@ static func diff_spawn() -> float:
 	return [1.45, 1.15, 0.85][clampi(diff_index(), 0, 2)]   # 刷新间隔倍率(越难越快)
 
 static func diff_lives() -> int:
-	return [6, 4, 3][clampi(diff_index(), 0, 2)]
+	return [6, 5, 3][clampi(diff_index(), 0, 2)]
 
 # ---------------- 关卡配置 ----------------
 ## 异形巢穴: 洞穴横向, 卵巢孵化小兵, 终点心脏 Boss
@@ -130,7 +130,7 @@ static func _level_lair() -> Dictionary:
 		"blossoms": blos,
 		"boss_pos": Vector2(3392, 24),
 		"boss_trigger": 3088.0,
-		"boss_hp": 60,
+		"boss_hp": 45,
 		"boss_tint": Color(1.0, 0.45, 0.6),
 		"ground_y": 200, "fall_line": 252.0,
 		"bg": "cave",
@@ -146,19 +146,19 @@ static func _level_snow() -> Dictionary:
 		Vector3i(2700, 116, 80),
 	]
 	var snip: Array[Vector2i] = [
-		Vector2i(350, 200), Vector2i(860, 200), Vector2i(1250, 200),
-		Vector2i(1430, 116), Vector2i(1850, 200), Vector2i(2020, 116),
-		Vector2i(2330, 200), Vector2i(2450, 116), Vector2i(2730, 200),
+		Vector2i(350, 200), Vector2i(860, 200),
+		Vector2i(1430, 116), Vector2i(1850, 200),
+		Vector2i(2450, 116), Vector2i(2730, 200),
 		Vector2i(3050, 200),
 	]
 	var turb: Array[Vector2i] = [
-		Vector2i(1050, 200), Vector2i(1650, 200), Vector2i(2150, 200),
-		Vector2i(2600, 200), Vector2i(3120, 200), Vector2i(3260, 200),
+		Vector2i(1050, 200), Vector2i(1650, 200),
+		Vector2i(2600, 200), Vector2i(3120, 200),
 	]
 	# 开花弹兵: 雪原关特色, 高血量可击杀; 均远离河岸落点
 	var blos: Array[Vector2i] = [
-		Vector2i(780, 200), Vector2i(1360, 200), Vector2i(1700, 200),
-		Vector2i(2250, 200), Vector2i(2900, 200), Vector2i(3180, 200),
+		Vector2i(780, 200), Vector2i(1360, 200),
+		Vector2i(2250, 200), Vector2i(2900, 200),
 	]
 	return {
 		"name": "MISSION 3  雪原",

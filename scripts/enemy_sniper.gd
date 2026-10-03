@@ -38,7 +38,7 @@ func _physics_process(delta: float) -> void:
 		return
 	var dx: float = pl.global_position.x - global_position.x
 	_sprite.flip_h = dx < 0
-	if absf(dx) < 300.0:
+	if absf(dx) < 260.0:
 		_t -= delta
 		if _t < fire_int - 0.25:
 			_angle = aim_angle(pl)
@@ -62,5 +62,5 @@ func _fire() -> void:
 	var eb := EBullet.new()
 	g.enemies_node.add_child(eb)
 	eb.setup(global_position + Vector2(0, -18) + d * 12.0, d,
-		150.0 * GameData.fire_scale(Boot.loop_count))
+		135.0 * GameData.fire_scale(Boot.loop_count))
 	Boot.play_sfx("sfx_clang", -6.0)

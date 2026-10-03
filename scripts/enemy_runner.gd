@@ -23,7 +23,7 @@ func _ready() -> void:
 	if randf() < 0.12:
 		run_dir = 1
 	_sprite.flip_h = run_dir > 0
-	_fire_t = 1.2 + randf() * 2.4
+	_fire_t = 1.8 + randf() * 2.4
 
 func _physics_process(delta: float) -> void:
 	var g := get_tree().get_first_node_in_group("game")
@@ -79,7 +79,7 @@ func L_GROUND_Y_FALL() -> float:
 	return g.L_GROUND_Y + 6.0 if g != null else 206.0
 
 func _shoot() -> void:
-	_fire_t = 1.4 + randf() * 2.0
+	_fire_t = 1.8 + randf() * 2.0
 	var g := get_tree().get_first_node_in_group("game")
 	if g == null:
 		return

@@ -30,7 +30,7 @@ func _physics_process(delta: float) -> void:
 	if dist < 240.0 and not pl.dead:
 		_spawn_cd -= delta
 		if _spawn_cd <= 0.0:
-			_spawn_cd = 4.0 + randf() * 2.0
+			_spawn_cd = 6.0 + randf() * 3.0
 			_hatch()
 
 func _hatch() -> void:

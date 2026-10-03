@@ -6,7 +6,7 @@ signal weapon_changed(w: int)
 
 const SHEET_P1 := preload("res://assets/sprites/player.png")
 const SHEET_P2 := preload("res://assets/sprites/player2.png")
-const INVINCIBLE_TIME := 2.0
+const INVINCIBLE_TIME := 2.5
 const SHIELD_TIME := 12.0
 
 # 姿态

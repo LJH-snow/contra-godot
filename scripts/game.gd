@@ -495,12 +495,12 @@ func _process(delta: float) -> void:
 		_intro_t -= delta
 		return
 
-	# 敌人波次 (难度影响刷新间隔; 瀑布关单独放宽波次间隔)
+	# 敌人波次 (难度影响刷新间隔; 瀑布/巢穴关单独放宽波次间隔)
 	_spawn_t -= delta
 	if _spawn_t <= 0.0 and not boss_active:
-		var vertical_spawn_scale := 1.4 if L_VERTICAL else 1.0
+		var spawn_scale := 1.4 if L_VERTICAL else (1.2 if Boot.level >= 4 else 1.0)
 		_spawn_t = maxf(1.5, 2.7 - Boot.loop_count * 0.15) \
-				* GameData.diff_spawn() * vertical_spawn_scale
+				* GameData.diff_spawn() * spawn_scale
 		_spawn_wave()
 
 	# 胶囊 / 震天鹰只在横向关出现, 避免瀑布关叠加空中危险源

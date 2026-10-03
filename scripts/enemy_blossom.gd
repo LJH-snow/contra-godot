@@ -25,8 +25,12 @@ var _bud: Sprite2D
 
 func _physics_process(delta: float) -> void:
 	_pulse += delta
-	_sprite.self_modulate = Color(1.0, 0.62, 0.72) \
-		if fmod(_pulse, 1.0) < 0.5 else Color(0.9, 0.45, 0.6)
+	# 开花前 0.35s 通体发亮预警, 之后回落呼吸色
+	if _t <= 0.35:
+		_sprite.self_modulate = Color(1.9, 1.7, 1.2)
+	else:
+		_sprite.self_modulate = Color(1.0, 0.62, 0.72) \
+			if fmod(_pulse, 1.0) < 0.5 else Color(0.9, 0.45, 0.6)
 	_bud.position.y = -34.0 + sin(_pulse * 4.0) * 2.0
 	_bud.modulate.a = 0.75 + 0.25 * sin(_pulse * 6.0)
 	var g := get_tree().get_first_node_in_group("game")
