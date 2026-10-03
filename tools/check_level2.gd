@@ -83,6 +83,11 @@ func _physics_process(_d: float) -> void:
 						overlap_ok = true
 				check(base_ok, "出生站位浮台存在")
 				check(overlap_ok, "上一层浮台与出生台横向重叠 (起步满跳可达)")
+				var catch_ok := false
+				for p in game.L_PLATFORMS:
+					if p.y >= 220 and p.y <= 245 and p.x + p.z >= 236:
+						catch_ok = true
+				check(catch_ok, "要塞右侧有接坠平台 (不再直通水底)")
 				check(game.player != null and game.player.position.y > 1500.0, "玩家出生在底部")
 				var bg := game.get_node("Background/FarLayer/FarSprite")
 				check(bg.texture.resource_path.ends_with("bg_waterfall.png"), "瀑布崖壁背景已换装")

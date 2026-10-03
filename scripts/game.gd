@@ -357,7 +357,7 @@ func _build_statics() -> void:
 	for s in cfg["snipers"]:
 		var sn := EnemySniper.new()
 		if L_VERTICAL:
-			sn.fire_int = 2.6
+			sn.fire_int = 3.2
 		sn.position = Vector2(s.x, s.y)
 		enemies_node.add_child(sn)
 		_hook_score(sn)
@@ -373,7 +373,8 @@ func _build_statics() -> void:
 	for t in cfg["turrets"]:
 		var tu := EnemyTurret.new()
 		if L_VERTICAL:
-			tu.fire_int = 3.6
+			tu.fire_int = 4.8
+			tu.burst = 2
 		tu.position = Vector2(t.x, t.y)
 		enemies_node.add_child(tu)
 		_hook_score(tu)
@@ -387,7 +388,7 @@ func _build_statics() -> void:
 	if L_VERTICAL:
 		# 瀑布顶要塞: 裸核心 (闸门由核心开合表现)
 		_make_core(cfg["boss_pos"] + Vector2(48, 100), 30)   # 核心落进屏内, 站顶台直射可及
-		boss_core.fire_int = 2.6                             # 纵向关核心弹幕更稀, 配合双炮塔
+		boss_core.fire_int = 3.4                             # 纵向关核心弹幕更稀, 配合双炮塔
 	else:
 		boss_wall = StaticBody2D.new()
 		boss_wall.set_script(preload("res://scripts/boss_wall.gd"))

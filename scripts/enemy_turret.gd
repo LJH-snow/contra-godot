@@ -4,6 +4,7 @@ class_name EnemyTurret extends Enemy
 const SHEET := preload("res://assets/sprites/turret.png")
 
 var fire_int := 2.1
+var burst := 3                         # 每轮连发弹数 (瀑布关调低)
 var _t := 1.0
 var _burst := 0
 var _burst_t := 0.0
@@ -37,7 +38,7 @@ func _physics_process(delta: float) -> void:
 			_t -= delta
 			if _t <= 0.0:
 				_t = fire_int * (0.85 + randf() * 0.4)
-				_burst = 3
+				_burst = burst
 				_burst_t = 0.0
 
 func _fire() -> void:

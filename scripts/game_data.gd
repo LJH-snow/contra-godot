@@ -243,6 +243,8 @@ static func level_config(n: int) -> Dictionary:
 		si += 1
 	# 顶部要塞平台 + 双炮塔
 	plats.append(Vector3i(88, 120, 144))
+	# 要塞右侧接坠台: 下方浮台只到 x172, 右半边坠落原本直通水底
+	plats.append(Vector3i(156, 232, 80))
 	turb.append(Vector2i(60, 120))
 	turb.append(Vector2i(248, 120))
 	return {
