@@ -1,6 +1,10 @@
 extends Node2D
 ## 通关结局: 直升机撤离演出 + THE END 字幕 → 回标题(周目+1)
-## 全程序化绘制 (_draw), 零素材依赖
+## 中文文案用预渲染 PNG (运行时字体无中文字形), 直升机程序化绘制
+
+const ENDING1 := preload("res://assets/text/ending1.png")
+const ENDING_FALCON := preload("res://assets/text/ending_falcon.png")
+const ENDING_EVAC := preload("res://assets/text/ending_evac.png")
 
 var _t := 0.0
 var _heli_x := -140.0
@@ -8,6 +12,9 @@ var _rotor := 0.0
 var _phase := 0                     # 0=飞入 1=悬停 2=撤离 3=THE END
 var _done_label: Label
 var _stats: Label
+var _heli_node: Node2D
+var _falcon: TextureRect
+var _evac: TextureRect
 var _skipped := false
 
 func _ready() -> void:
@@ -24,15 +31,12 @@ func _ready() -> void:
 		get_tree().quit(0)
 		return
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	Boot.loop_count += 1               # 通关进入下一周目
 	Boot.play_music("music_gameover", -14.0)   # 低回氛围
+	# 绘制顺序: 同一画布内按树序 — 天空最底, 其后山/直升机/文字依次叠加
 	var sky := ColorRect.new()
 	sky.color = Color(0.05, 0.04, 0.1)
-	sky.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var layer := CanvasLayer.new()
-	layer.layer = 1
-	add_child(layer)
-	layer.add_child(sky)
+	sky.size = Vector2(320, 240)         # Node2D 下 anchors 不可靠, 用显式尺寸
+	add_child(sky)
 	# 远山剪影
 	var hills := Polygon2D.new()
 	hills.polygon = PackedVector2Array([
@@ -40,10 +44,14 @@ func _ready() -> void:
 		Vector2(260, 192), Vector2(320, 178), Vector2(320, 240), Vector2(0, 240)])
 	hills.color = Color(0.1, 0.09, 0.16)
 	add_child(hills)
-	# 标语
-	_label("MISSION  ACCOMPLISHED", Color(0.55, 1.0, 0.7), 24, 60, 14)
-	_label("红色猎鹰 已被摧毁", Color(0.8, 0.85, 1.0), 40, 100, 9)
-	_label("直升机撤离中...", Color(0.6, 0.65, 0.8), 70, 120, 8)
+	# 直升机: 独立子节点绘制 (父节点自身绘制永远在子节点之下, 会被天空盖住)
+	_heli_node = Node2D.new()
+	_heli_node.draw.connect(_draw_heli.bind(_heli_node))
+	add_child(_heli_node)
+	# 标语 (预渲染 PNG, nearest 过滤保证像素清晰)
+	_mkrect(ENDING1, 70.0)
+	_falcon = _mkrect(ENDING_FALCON, 104.0)
+	_evac = _mkrect(ENDING_EVAC, 126.0)
 	# THE END (阶段 3 显示)
 	_done_label = Label.new()
 	_done_label.text = "THE  END"
@@ -72,51 +80,49 @@ func _ready() -> void:
 	hint.add_theme_color_override("font_color", Color(0.7, 0.74, 0.85))
 	add_child(hint)
 
-func _label(txt: String, col: Color, y: int, size: int, fsize: int) -> void:
-	var l := Label.new()
-	l.text = txt
-	l.position = Vector2(0, y)
-	l.size = Vector2(320, size + 8)
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.add_theme_font_size_override("font_size", fsize)
-	l.add_theme_color_override("font_color", col)
-	l.add_theme_color_override("font_outline_color", Color(0.05, 0.04, 0.08))
-	l.add_theme_constant_override("outline_size", 3)
-	add_child(l)
+func _mkrect(tex: Texture2D, center_y: float) -> TextureRect:
+	var t := TextureRect.new()
+	t.texture = tex
+	t.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	t.position = Vector2(roundf(160.0 - tex.get_width() / 2.0),
+		roundf(center_y - tex.get_height() / 2.0))
+	add_child(t)
+	return t
 
-## 程序化直升机 (position 为机身中心)
-func _draw() -> void:
+## 程序化直升机 (position 为机身中心), 由 _heli_node 的 draw 信号驱动
+## 绘制调用必须落在正在绘制的节点上, 因此所有 draw_* 通过参数 on 转发
+func _draw_heli(on: CanvasItem) -> void:
 	if _phase >= 3:
 		return
 	var x := _heli_x
-	var y := 74.0
+	var y := 150.0                      # 撤离走廊: 标语下方, 远山上方
 	var body_col := Color(0.32, 0.38, 0.52)
 	var dark := Color(0.2, 0.24, 0.36)
 	# 尾梁
-	draw_line(Vector2(x - 20, y - 2), Vector2(x - 44, y - 6), dark, 4.0)
-	draw_polygon(
+	on.draw_line(Vector2(x - 20, y - 2), Vector2(x - 44, y - 6), dark, 4.0)
+	on.draw_polygon(
 		PackedVector2Array([Vector2(x - 50, y - 10), Vector2(x - 40, y - 9),
 			Vector2(x - 44, y - 2), Vector2(x - 52, y - 3)]),
 		PackedColorArray([dark, dark, dark, dark]))
 	# 机身
-	drawEllipse(x, y, 20, 9, body_col)
-	drawEllipse(x + 6, y - 2, 9, 6, Color(0.5, 0.62, 0.8))
+	drawEllipse(on, x, y, 20, 9, body_col)
+	drawEllipse(on, x + 6, y - 2, 9, 6, Color(0.5, 0.62, 0.8))
 	# 起落橇
-	draw_line(Vector2(x - 14, y + 12), Vector2(x + 16, y + 12), dark, 2.0)
-	draw_line(Vector2(x - 10, y + 8), Vector2(x - 10, y + 12), dark, 2.0)
-	draw_line(Vector2(x + 12, y + 8), Vector2(x + 12, y + 12), dark, 2.0)
+	on.draw_line(Vector2(x - 14, y + 12), Vector2(x + 16, y + 12), dark, 2.0)
+	on.draw_line(Vector2(x - 10, y + 8), Vector2(x - 10, y + 12), dark, 2.0)
+	on.draw_line(Vector2(x + 12, y + 8), Vector2(x + 12, y + 12), dark, 2.0)
 	# 旋翼 (旋转)
 	_rotor += 0.5
 	var rx := cos(_rotor) * 34.0
-	draw_line(Vector2(x - rx, y - 11), Vector2(x + rx, y - 11), Color(0.75, 0.78, 0.88), 2.0)
-	draw_line(Vector2(x, y - 11), Vector2(x, y - 15), dark, 2.0)
+	on.draw_line(Vector2(x - rx, y - 11), Vector2(x + rx, y - 11), Color(0.75, 0.78, 0.88), 2.0)
+	on.draw_line(Vector2(x, y - 11), Vector2(x, y - 15), dark, 2.0)
 
-func drawEllipse(cx: float, cy: float, rx: float, ry: float, col: Color) -> void:
+func drawEllipse(on: CanvasItem, cx: float, cy: float, rx: float, ry: float, col: Color) -> void:
 	var pts := PackedVector2Array()
 	for i in range(24):
 		var a := TAU * i / 24.0
 		pts.append(Vector2(cx + cos(a) * rx, cy + sin(a) * ry))
-	draw_colored_polygon(pts, col)
+	on.draw_colored_polygon(pts, col)
 
 func _process(delta: float) -> void:
 	_t += delta
@@ -136,10 +142,12 @@ func _process(delta: float) -> void:
 			if _heli_x > 460.0:
 				_phase = 3
 				_done_label.visible = true
-				_stats.text = "SCORE %07d    LOOP %d    KILLS(生涯) %d" % [
+				_falcon.visible = false            # THE END 阶段收起撤离字幕
+				_evac.visible = false
+				_stats.text = "SCORE %07d    LOOP %d    CAREER KILLS %d" % [
 					Boot.score, Boot.loop_count, Boot.lifetime_kills]
 				Boot.play_music("music_title", -8.0)
-	queue_redraw()
+	_heli_node.queue_redraw()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
