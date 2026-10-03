@@ -7,6 +7,7 @@ const SHEET := preload("res://assets/sprites/boss_core.png")
 
 var open := false
 var fire_int := 1.8
+var volley := 3                       # 每轮弹数 (瀑布关调低)
 var enraged := false                  # 半血以下狂暴: 射速翻倍+五连弹幕
 var _t := 2.0
 var _burst := 0
@@ -44,7 +45,7 @@ func _physics_process(delta: float) -> void:
 		_t -= delta
 		if _t <= 0.0:
 			_t = fire_interval() * (0.9 + randf() * 0.25)
-			_burst = 5 if enraged else 3
+			_burst = 5 if enraged else volley
 			_burst_t = 0.05
 
 ## 半血以下狂暴: 射速翻倍, 五连弹幕, 闪光提示
@@ -56,7 +57,8 @@ func _fire(pl: Node2D) -> void:
 	if g == null:
 		return
 	var d := (pl.global_position + Vector2(0, -12) - (global_position + Vector2(0, -14))).normalized()
-	var offs: Array = [-0.28, -0.14, 0.0, 0.14, 0.28] if enraged else [-0.16, 0.0, 0.16]
+	var offs: Array = [-0.28, -0.14, 0.0, 0.14, 0.28] if enraged \
+			else ([-0.18, 0.18] if volley <= 2 else [-0.16, 0.0, 0.16])
 	for off in offs:
 		var eb := EBullet.new()
 		g.enemies_node.add_child(eb)
