@@ -193,20 +193,21 @@ func _physics_process(_d: float) -> void:
 				_next(13, 10)
 		13:
 			if _due():
+				check(_blossom.hp == 8, "开花弹兵高血量 (hp=%d)" % _blossom.hp)
 				_blossom.damage(5, Vector2.RIGHT)
 				_next(14, 5)
 		14:
 			if _due():
 				if not is_instance_valid(_blossom):
-					check(false, "开花弹兵不可击毙")
+					check(false, "开花弹兵可受击 (hp 8→3)")
 					_next(99, 1)
 					return
-				check(_blossom.hp > 1000, "开花弹兵受击无伤 (hp=%d)" % _blossom.hp)
-				game.eagle_wipe()
+				check(_blossom.hp == 3, "开花弹兵可受击 (hp 8→%d)" % _blossom.hp)
+				_blossom.damage(5, Vector2.RIGHT)
 				_next(15, 5)
 		15:
 			if _due():
-				check(is_instance_valid(_blossom), "金鹰清屏不误杀开花弹兵")
+				check(not is_instance_valid(_blossom), "开花弹兵可被击杀 (8血打空)")
 				# 【7】震天鹰: 三鹰编队, 击落中间
 				_clear_field()
 				_place_player(400.0, 200.0)
@@ -258,6 +259,27 @@ func _physics_process(_d: float) -> void:
 		20:
 			if _due():
 				check(p.lives == _lives0 + 1, "击碎滚石掉 1UP (%d→%d)" % [_lives0, p.lives])
+				_next(21, 1)
+		21:
+			if _due():
+				# 【9】卧倒: 平射弹从头顶飞过 (受击框压扁)
+				_clear_field()
+				_place_player(400.0, 200.0)
+				p.invuln_t = 0.0
+				_lives0 = p.lives
+				Input.action_press("p1_down")
+				_next(22, 30)
+		22:
+			if _due():
+				check(p.prone, "按住↓进入卧倒姿态")
+				var eb := EBullet.new()
+				eb.setup(Vector2(p.position.x - 60.0, p.position.y - 15.0), Vector2.RIGHT, 140.0)
+				game.enemies_node.add_child(eb)
+				_next(23, 45)
+		23:
+			if _due():
+				Input.action_release("p1_down")
+				check(not p.dead and p.lives == _lives0, "卧倒躲开平射弹")
 				_next(99, 1)
 		99:
 			if _due():

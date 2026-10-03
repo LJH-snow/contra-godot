@@ -152,6 +152,9 @@ func _on_player_died(p: Player) -> void:
 		_game_over()
 
 func _respawn_player(p: Player) -> void:
+	if L_VERTICAL:
+		_respawn_player_vertical(p)
+		return
 	var base := cam_x + 30.0
 	if players.size() > 1:
 		# 避开还活着的同伴
@@ -173,6 +176,27 @@ func _respawn_player(p: Player) -> void:
 	# 复活点附近清场保护
 	for e in get_tree().get_nodes_in_group("enemies"):
 		if absf(e.position.x - x) < 100.0 and e is EnemyRunner:
+			e.queue_free()
+
+## 纵向关复活: 在当前相机视野内找最低的宽浮台, 避免落在水面或屏幕外
+func _respawn_player_vertical(p: Player) -> void:
+	var cands: Array = []
+	for q in L_PLATFORMS:
+		if q.z >= 48 and q.y >= cam_y + 20.0 and q.y <= cam_y + 230.0:
+			cands.append(q)
+	if cands.is_empty():
+		for q in L_PLATFORMS:
+			if q.z >= 48:
+				cands.append(q)
+	if cands.is_empty():
+		p.respawn(Vector2(160.0, L_H - 180.0))
+		return
+	cands.sort_custom(func(a, b): return a.y > b.y)
+	var q: Vector3i = cands[0]
+	p.respawn(Vector2(q.x + q.z / 2.0, q.y - 2.0))
+	# 复活台附近清场保护
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if absf(e.position.y - float(q.y)) < 80.0 and e is EnemyRunner:
 			e.queue_free()
 
 # ---------------- 地形 ----------------
@@ -654,9 +678,8 @@ func eagle_wipe() -> void:
 	Boot.play_sfx("sfx_eagle")
 	hud.call("flash_message", "eagle", 1.2)
 	for e in get_tree().get_nodes_in_group("enemies"):
-		# 核心与开花弹兵不可击毙, 滚石非敌不触发彩蛋
-		if e is Enemy and not (e is BossCore) and not (e is EnemyBlossom) \
-				and not (e is EnemyRock):
+		# 核心与滚石不吃清屏彩蛋
+		if e is Enemy and not (e is BossCore) and not (e is EnemyRock):
 			e.kill()
 	# 清空敌弹
 	for n in enemies_node.get_children():

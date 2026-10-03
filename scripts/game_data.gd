@@ -210,7 +210,7 @@ static func level_config(n: int) -> Dictionary:
 				Vector2i(2920, 200), Vector2i(3120, 200),
 			],
 			"blossoms": [
-				Vector2i(1420, 200), Vector2i(2320, 200), Vector2i(2800, 116),
+				Vector2i(1900, 200), Vector2i(2320, 200), Vector2i(2800, 116),
 			],
 			"turrets": [
 				Vector2i(928, 200), Vector2i(2080, 200), Vector2i(2384, 200),
@@ -225,11 +225,11 @@ static func level_config(n: int) -> Dictionary:
 	var plats: Array[Vector3i] = []
 	var snip: Array[Vector2i] = []
 	var turb: Array[Vector2i] = []
-	# 之字浮台: 每 80px 一层, 左右交错 (y 从底部 1560 到顶部 120)
+	# 之字浮台: 每 80px 一层, 左右微错位且横向重叠 (y 从底部 1560 到顶部 120)
 	var y := 1560
 	var side := 0
 	while y > 140:
-		var x := 36 if side == 0 else 172
+		var x := 36 if side == 0 else 108
 		plats.append(Vector3i(x, y, 76))
 		if y % 240 < 120:                        # 部分层加侧翼小台
 			plats.append(Vector3i(140 if side == 0 else 20, y - 56, 48))

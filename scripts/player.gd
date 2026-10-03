@@ -47,6 +47,8 @@ var _sprite: Sprite2D
 var _muzzle: Sprite2D
 var _ring: Sprite2D
 var _hurtbox: Area2D
+var _hurt_cs: CollisionShape2D
+var _hurt_sh: RectangleShape2D
 
 func _ready() -> void:
 	add_to_group("player")
@@ -81,12 +83,12 @@ func _ready() -> void:
 	_hurtbox = Area2D.new()
 	_hurtbox.collision_layer = 0
 	_hurtbox.collision_mask = GameData.L_EBULLET | GameData.L_ENEMY
-	var hcs := CollisionShape2D.new()
-	var hsh := RectangleShape2D.new()
-	hsh.size = Vector2(10, 24)
-	hcs.shape = hsh
-	hcs.position = Vector2(0, -13)
-	_hurtbox.add_child(hcs)
+	_hurt_cs = CollisionShape2D.new()
+	_hurt_sh = RectangleShape2D.new()
+	_hurt_sh.size = Vector2(10, 24)
+	_hurt_cs.shape = _hurt_sh
+	_hurt_cs.position = Vector2(0, -13)
+	_hurtbox.add_child(_hurt_cs)
 	add_child(_hurtbox)
 	lives = Boot.start_lives
 	weapon_changed.emit(weapon)
@@ -182,6 +184,13 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 	_update_ground(g)
+	# 卧倒受击框压扁: 平射弹从头顶飞过 (敌人身体接触仍能命中)
+	if prone:
+		_hurt_sh.size = Vector2(10, 6)
+		_hurt_cs.position = Vector2(0, -3)
+	else:
+		_hurt_sh.size = Vector2(10, 24)
+		_hurt_cs.position = Vector2(0, -13)
 	_animate(delta)
 	_poll_hurt()
 

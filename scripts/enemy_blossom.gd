@@ -1,5 +1,5 @@
 class_name EnemyBlossom extends Enemy
-## 开花弹兵: 定点原地周期"开花"环形弹幕, 不可击毙 (官方雪原关特色, 只能躲)
+## 开花弹兵: 定点原地周期"开花"环形弹幕, 高血量可击杀 (头顶花苞标识)
 
 const SHEET := preload("res://assets/sprites/enemies.png")
 
@@ -9,12 +9,12 @@ var _pulse := 0.0
 func _ready() -> void:
 	add_to_group("enemies")
 	add_to_group("blossom")
-	hp = 999999                              # 不可击毙 (damage 覆盖)
-	score_val = 0
+	hp = 8                                   # 高血量: 需要连续输出才能打掉
+	score_val = 500
 	make_sprite(SHEET, 7, 6, 3)              # 开火姿态帧
 	make_body_shape(12, 24, -12)
 	z_index = 3
-	# 头顶脉动花苞: 提示"此兵特殊, 不可击毙"
+	# 头顶脉动花苞: 提示"此兵会开花弹幕"
 	_bud = Sprite2D.new()
 	_bud.texture = preload("res://assets/sprites/alien_pod_0.png")
 	_bud.position = Vector2(0, -34)
@@ -50,6 +50,3 @@ func _bloom(g: Node) -> void:
 			95.0 * GameData.fire_scale(Boot.loop_count))
 		g.enemies_node.add_child(eb)
 	Boot.play_sfx("sfx_spread", -8.0)
-
-func damage(_amt: int, _dir: Vector2) -> void:
-	Boot.play_sfx("sfx_clang", -6.0)         # 子弹被弹开, 毫发无损
