@@ -65,9 +65,9 @@ func _physics_process(_d: float) -> void:
 				check(main_plats.size() >= 18, "主浮台数量足够(%d个)" % main_plats.size())
 				var spacing_ok := true
 				for i in range(1, main_plats.size()):
-					if main_plats[i - 1].y - main_plats[i].y != 64:
+					if main_plats[i - 1].y - main_plats[i].y != 56:
 						spacing_ok = false
-				check(spacing_ok, "主浮台垂直间距 64px")
+				check(spacing_ok, "主浮台垂直间距 56px")
 				check(game.get_tree().get_nodes_in_group("air_missile").is_empty(), "瀑布关无空袭导弹")
 				# 起步可达: 出生台与上一层横向重叠, 无需横跨间隙
 				var base_ok := false
@@ -79,7 +79,7 @@ func _physics_process(_d: float) -> void:
 						if p.x <= 60 and p.x + p.z >= 60:
 							base_ok = true
 				for p in game.L_PLATFORMS:
-					if p.y == 1496 and p.z == 76 and p.x < base_right:
+					if p.y == 1504 and p.z == 76 and p.x < base_right:
 						overlap_ok = true
 				check(base_ok, "出生站位浮台存在")
 				check(overlap_ok, "上一层浮台与出生台横向重叠 (起步满跳可达)")
@@ -94,15 +94,15 @@ func _physics_process(_d: float) -> void:
 		1:
 			if _due():
 				check(not game.boss_active, "Boss 不在关卡开始时提前触发 (y≤3088 恒真回归)")
-				game.player.position = Vector2(74, 1490)
+				game.player.position = Vector2(110, 1496)
 				_next(2, 20)
 		2:
 			if _due():
-				game.player.position = Vector2(150, 1360)
+				game.player.position = Vector2(150, 1392)
 				_next(3, 20)
 		3:
 			if _due():
-				game.player.position = Vector2(74, 1040)
+				game.player.position = Vector2(60, 992)
 				_next(4, 20)
 		4:
 			if _due():
