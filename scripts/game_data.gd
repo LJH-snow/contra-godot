@@ -106,7 +106,7 @@ static func _level_lair() -> Dictionary:
 		Vector2i(1100, 200), Vector2i(2200, 200), Vector2i(3200, 200),
 	]
 	var blos: Array[Vector2i] = [
-		Vector2i(1490, 200), Vector2i(2320, 200), Vector2i(2800, 116),
+		Vector2i(1700, 200), Vector2i(2520, 200), Vector2i(2800, 116),
 	]
 	return {
 		"name": "FINAL  巢穴",
@@ -155,9 +155,9 @@ static func _level_snow() -> Dictionary:
 		Vector2i(1050, 200), Vector2i(1650, 200), Vector2i(2150, 200),
 		Vector2i(2600, 200), Vector2i(3120, 200), Vector2i(3260, 200),
 	]
-	# 开花弹兵: 雪原关特色, 不可击毙只能躲
+	# 开花弹兵: 雪原关特色, 高血量可击杀; 均远离河岸落点
 	var blos: Array[Vector2i] = [
-		Vector2i(640, 200), Vector2i(1180, 200), Vector2i(1700, 200),
+		Vector2i(780, 200), Vector2i(1360, 200), Vector2i(1700, 200),
 		Vector2i(2250, 200), Vector2i(2900, 200), Vector2i(3180, 200),
 	]
 	return {
@@ -210,7 +210,7 @@ static func level_config(n: int) -> Dictionary:
 				Vector2i(2920, 200), Vector2i(3120, 200),
 			],
 			"blossoms": [
-				Vector2i(1900, 200), Vector2i(2320, 200), Vector2i(2800, 116),
+				Vector2i(1900, 200), Vector2i(2500, 200), Vector2i(2800, 116),
 			],
 			"turrets": [
 				Vector2i(928, 200), Vector2i(2080, 200), Vector2i(2384, 200),
