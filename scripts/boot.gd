@@ -169,15 +169,14 @@ func _load_audio() -> void:
 			_music[n] = s
 
 func _load_wav(path: String, loop: bool) -> AudioStreamWAV:
-	var bytes := FileAccess.get_file_as_bytes(path)
-	if bytes.is_empty():
+	# 必须用 load(): 导出版的 pck 只含导入后资源, 原始 .wav 不打包,
+	# FileAccess 读原始文件在 Web/桌面导出版会全部失败 (本地编辑器运行则正常)
+	var s: AudioStreamWAV = load(path)
+	if s == null:
 		push_warning("音频缺失: " + path)
 		return null
-	var s := AudioStreamWAV.load_from_buffer(bytes)
-	if s == null:
-		push_warning("音频解析失败: " + path)
-		return null
 	if loop:
+		s = s.duplicate()                    # 循环参数只改这一份, 不污染缓存资源
 		s.loop_mode = AudioStreamWAV.LOOP_FORWARD
 		s.loop_begin = 0
 		s.loop_end = s.data.size() / 2
