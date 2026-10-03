@@ -85,9 +85,9 @@ func _ready() -> void:
 	_hurtbox.collision_mask = GameData.L_EBULLET | GameData.L_ENEMY
 	_hurt_cs = CollisionShape2D.new()
 	_hurt_sh = RectangleShape2D.new()
-	_hurt_sh.size = Vector2(10, 24)
+	_hurt_sh.size = Vector2(8, 20)       # 比身体视觉略窄: 贴弹擦过可存活
 	_hurt_cs.shape = _hurt_sh
-	_hurt_cs.position = Vector2(0, -13)
+	_hurt_cs.position = Vector2(0, -11)
 	_hurtbox.add_child(_hurt_cs)
 	add_child(_hurtbox)
 	lives = Boot.start_lives
@@ -186,11 +186,11 @@ func _physics_process(delta: float) -> void:
 	_update_ground(g)
 	# 卧倒受击框压扁: 平射弹从头顶飞过 (敌人身体接触仍能命中)
 	if prone:
-		_hurt_sh.size = Vector2(10, 6)
-		_hurt_cs.position = Vector2(0, -3)
+		_hurt_sh.size = Vector2(8, 4)
+		_hurt_cs.position = Vector2(0, -2)
 	else:
-		_hurt_sh.size = Vector2(10, 24)
-		_hurt_cs.position = Vector2(0, -13)
+		_hurt_sh.size = Vector2(8, 20)
+		_hurt_cs.position = Vector2(0, -11)
 	_animate(delta)
 	_poll_hurt()
 

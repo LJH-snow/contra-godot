@@ -33,7 +33,7 @@ func _ready() -> void:
 	add_child(s)
 	var cs := CollisionShape2D.new()
 	var sh := RectangleShape2D.new()
-	sh.size = Vector2(6, 6)
+	sh.size = Vector2(4, 4)               # 比弹头贴图略小: 擦过不算命中
 	cs.shape = sh
 	add_child(cs)
 

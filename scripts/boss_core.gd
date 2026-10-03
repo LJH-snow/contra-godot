@@ -41,16 +41,17 @@ func _physics_process(delta: float) -> void:
 			_burst -= 1
 			_burst_t = 0.24
 			_fire(pl)
-	elif open:
-		_t -= delta
-		if _t <= 0.0:
-			_t = fire_interval() * (0.9 + randf() * 0.25)
-			_burst = 5 if enraged else volley
-			_burst_t = 0.05
+		elif open:
+			_t -= delta
+			if _t <= 0.0:
+				_t = fire_interval() * (0.9 + randf() * 0.25)
+				_burst = volley if not enraged else (5 if volley >= 3 else 3)
+				_burst_t = 0.05
 
-## 半血以下狂暴: 射速翻倍, 五连弹幕, 闪光提示
+
+## 半血以下狂暴: 射速提升, 弹幕加宽; 小弹量 Boss 保持可躲
 func fire_interval() -> float:
-	return fire_int * (0.5 if enraged else 1.0)
+	return fire_int * ((0.7 if volley <= 2 else 0.5) if enraged else 1.0)
 
 func _fire(pl: Node2D) -> void:
 	var g := get_tree().get_first_node_in_group("game")
