@@ -235,8 +235,8 @@ static func level_config(n: int) -> Dictionary:
 		plats.append(Vector3i(x, y, 76))
 		if y % 240 < 120:                        # 部分层加侧翼小台
 			plats.append(Vector3i(140 if side == 0 else 20, y - 40, 48))
-		if y < 1500 and si % 3 == 0:
-			# 狙击手靠平台外端, 让出攀爬落点 (右台从左侧上, 左台从右侧上)
+		if y > 320 and y < 1500 and si % 3 == 0:
+			# 狙击手靠平台外端让出落点 (右台从左侧上, 左台从右侧上); 顶部 Boss 区不设
 			snip.append(Vector2i(x + (14 if side == 0 else 58), y - 16))
 		y -= 56
 		side = 1 - side

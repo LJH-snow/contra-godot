@@ -121,9 +121,10 @@ func show_boss_bar(v: bool) -> void:
 	if v:
 		_boss_bar.value = 1.0
 
-## 纵向关: Boss 在屏幕上方, 血条移到底部避免遮挡攀爬路径
+## 纵向关: Boss 在屏幕上方, 血条移到底部避让生命图标, 不遮挡攀爬路径
 func set_boss_bar_bottom() -> void:
-	_boss_bar.position = Vector2(42, 206)
+	_boss_bar.position = Vector2(70, 202)
+	_boss_bar.size = Vector2(180, 8)
 	_boss_title.position = Vector2(10, 205)
 
 func set_boss_hp(f: float) -> void:

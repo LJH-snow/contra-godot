@@ -51,7 +51,8 @@ var level_done := false
 var _spawn_t := 1.2
 var _capsule_t := 9.0
 var _items_dropped := 0
-var _w := [GameData.W.M, GameData.W.S, GameData.W.L, GameData.W.F, GameData.W.R, GameData.W.B]
+var _w := [GameData.W.S, GameData.W.B, GameData.W.S, GameData.W.M, GameData.W.S,
+	GameData.W.L, GameData.W.S, GameData.W.F, GameData.W.S, GameData.W.R]
 var _wig := [0, 1, 2, 3, 4, 5]
 var _wig_i := 0
 var _end_t := 0.0
@@ -179,11 +180,11 @@ func _respawn_player(p: Player) -> void:
 		if absf(e.position.x - x) < 100.0 and e is EnemyRunner:
 			e.queue_free()
 
-## 纵向关复活: 在当前相机视野内找最低的宽浮台, 避免落在水面或屏幕外
+## 纵向关复活: 在相机视野上半部找最低的宽浮台 (避开底部血条区, Boss 战直接落回要塞)
 func _respawn_player_vertical(p: Player) -> void:
 	var cands: Array = []
 	for q in L_PLATFORMS:
-		if q.z >= 48 and q.y >= cam_y + 20.0 and q.y <= cam_y + 230.0:
+		if q.z >= 48 and q.y >= cam_y + 20.0 and q.y <= cam_y + 150.0:
 			cands.append(q)
 	if cands.is_empty():
 		for q in L_PLATFORMS:
@@ -372,7 +373,7 @@ func _build_statics() -> void:
 	for t in cfg["turrets"]:
 		var tu := EnemyTurret.new()
 		if L_VERTICAL:
-			tu.fire_int = 3.0
+			tu.fire_int = 3.6
 		tu.position = Vector2(t.x, t.y)
 		enemies_node.add_child(tu)
 		_hook_score(tu)
@@ -386,6 +387,7 @@ func _build_statics() -> void:
 	if L_VERTICAL:
 		# 瀑布顶要塞: 裸核心 (闸门由核心开合表现)
 		_make_core(cfg["boss_pos"] + Vector2(48, 100), 30)   # 核心落进屏内, 站顶台直射可及
+		boss_core.fire_int = 2.6                             # 纵向关核心弹幕更稀, 配合双炮塔
 	else:
 		boss_wall = StaticBody2D.new()
 		boss_wall.set_script(preload("res://scripts/boss_wall.gd"))
@@ -586,6 +588,8 @@ func _spawn_wave_vertical() -> void:
 	for i in range(count):
 		var plat: Vector3i = cands[randi() % cands.size()]
 		var e := EnemyRunner.new()
+		if randf() < 0.15:
+			e.drops_weapon = true                # 红兵: 纵向关唯一的道具来源
 		e.position = Vector2(plat.x + randf_range(8, plat.z - 8), plat.y - 20.0)
 		enemies_node.add_child(e)
 		_hook_score(e)
