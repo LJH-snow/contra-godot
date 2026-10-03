@@ -30,8 +30,8 @@ butler push export/web your-name/contra:html5 --userversion "1.0.0"
 ## 本地预览
 
 ```bash
-cd export/web && python3 -m http.server 8767
-# 浏览器打开 http://127.0.0.1:8767
+python3 tools/preview_server.py export/web
+# 浏览器打开 http://127.0.0.1:8767 (带 no-cache 头, 改动即时生效)
 ```
 
 ## 桌面版（可选）
